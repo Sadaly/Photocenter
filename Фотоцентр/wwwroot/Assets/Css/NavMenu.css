@@ -1,0 +1,36 @@
+﻿.body {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.nav-bar {
+    list-style: none;
+    display: flex;
+    padding: 5px;
+    margin: -8px;
+    justify-content: right;
+    background: #000000;
+}
+
+    .nav-bar li {
+        display: inline-block;
+        margin-right: 12px;
+    }
+
+.menu-link {
+    text-decoration: none;
+    color: #f7e9e5;
+    font-size: 32px;
+    display: inline-block;
+    padding: 5px;
+    transition: color 0.2s ease, font-size 0.2s ease; /* Плавный переход */
+}
+
+    .menu-link:hover {
+        text-decoration: underline;
+        color: darkred;
+        font-size: 32px; /* Оставляем размер текста неизменным */
+        transform: scale(1.2); /* Легкое увеличение только текста */
+    }

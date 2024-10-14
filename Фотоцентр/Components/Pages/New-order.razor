@@ -1,0 +1,37 @@
+﻿@page "/new-order"
+
+<PageTitle>Фотоцентр | Новый заказ</PageTitle>
+
+<head runat="server">
+    <link href="Assets\Css\NewOrder.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <form>
+        <div class="form-group">
+            <label for="photoLink">Выберите фотографию или введите ссылку:</label>
+            <input type="text" placeholder="Ссылка" id="photoLink" name="photoLink">
+            <input type="file" id="photo" name="photo">
+        </div>
+        <div class="form-group">
+            <label for="service">Выберите одну из доступных услуг:</label>
+            <select id="service" name="service">
+                <option value="retouching">Ретушь фотографий</option>
+                <option value="colorCorrection">Цветокоррекция</option>
+                <option value="restoration">Восстановление старых фото</option>
+                <option value="photoEditing">Редактирование фотографий</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="description">Описание необходимых работ:</label>
+            <textarea id="description" name="description" placeholder="Введите описание..." required></textarea>
+        </div>
+        <div class="form-group">
+            <button type="submit">К оплате</button>
+        </div>
+    </form>
+</body>
+
+@code {
+
+}

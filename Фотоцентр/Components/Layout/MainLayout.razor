@@ -1,0 +1,55 @@
+﻿@inherits LayoutComponentBase
+
+<head>
+	<link href="Assets\Css\NavMenu.css" rel="stylesheet" type="text/css" />
+</head>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+<div class="page">
+	@switch (role)
+	{
+		case Role.admin:
+			{
+				<AdminNavMenu />
+				break;
+			}
+		case Role.client:
+			{
+				<ClientNavMenu />
+				break;
+			}
+		case Role.manager:
+			{
+				<ManagerNavMenu />
+				break;
+			}
+		case Role.photographer:
+			{
+				<PhotographerNavMenu />
+				break;
+			}
+		default:
+			{
+				break;
+			}
+	}
+</div>
+
+@Body
+
+@code {
+	enum Role
+	{
+		none,
+		admin,
+		client,
+		manager,
+		photographer,
+	}
+	private Role role = Role.admin; 
+}

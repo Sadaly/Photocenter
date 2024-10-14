@@ -1,0 +1,50 @@
+﻿@page "/my-orders"
+
+<PageTitle>Фотоцентр | Мои заказы</PageTitle>
+
+<head runat="server">
+    <link href="Assets\Css\MyOrders.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+
+    <h2>Информация о заказах</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Дата заказа</th>
+                <th>Стоимость</th>
+                <th>Статус</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>08.10.2024</td>
+                <td>2500 ₽</td>
+                <td class="status completed">Завершён</td>
+            </tr>
+            <tr>
+                <td>05.10.2024</td>
+                <td>1500 ₽</td>
+                <td class="status pending">В ожидании</td>
+            </tr>
+            <tr>
+                <td>03.10.2024</td>
+                <td>1800 ₽</td>
+                <td class="status cancelled">Отменён</td>
+            </tr>
+            <tr>
+                <td>01.10.2024</td>
+                <td>2200 ₽</td>
+                <td class="status completed">Завершён</td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+
+
+@code {
+
+}
