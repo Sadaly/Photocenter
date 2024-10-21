@@ -1,14 +1,28 @@
 ﻿@page "/send-order"
 
-<PageTitle>Фотоцентр | О нас</PageTitle>
+<PageTitle>Фотоцентр | Отправка изображения</PageTitle>
+<head>
+    <link href="/Assets/Css/SendOrder.css" rel="stylesheet" type="text/css"/>
+</head>
 
-<div class="about-page">
-	<h1>О сервисе</h1>
-	<p class="description">Данный сайт является частью курсового проекта по дисциплине: "Разработка приложений баз данных". С помощью сервиса вы можете создавать запросы на обработку фотографий.</p>
-	<p class="info">Тема работы: "Разработка информационной системы: Фотоцентр";</p>
-	<p class="info">Разработчик: Мальцев М.С;</p>
-	<p class="info">Группа: 22-КБ-ПИ1.</p>
-</div>
+<form action="/submit" method="post" enctype="multipart/form-data">
+    <div>
+        <label for="imageFile">Загрузить изображение:</label>
+        <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+    </div>
+
+    <div>
+        <label for="imageUrl">Или введите ссылку на изображение:</label>
+        <input type="url" id="imageUrl" name="imageUrl" placeholder="http://example.com/image.jpg">
+    </div>
+
+    <div>
+        <label for="comment">Комментарий:</label>
+        <textarea id="comment" name="comment" rows="4" placeholder="Введите ваш комментарий"></textarea>
+    </div>
+
+    <button type="submit">Отправить</button>
+</form>
 
 @code {
 

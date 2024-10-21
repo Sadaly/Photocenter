@@ -1,7 +1,7 @@
 ﻿@inherits LayoutComponentBase
 
 <head>
-	<link href="Assets\Css\NavMenu.css" rel="stylesheet" type="text/css" />
+	<link href="Assets/Css/NavMenu.css" rel="stylesheet" type="text/css" />
 </head>
 
 <div id="blazor-error-ui">
@@ -38,6 +38,7 @@
 				break;
 			}
 	}
+	<script src="Scripts/Profile.js"></script>
 </div>
 
 @Body
@@ -51,5 +52,5 @@
 		manager,
 		photographer,
 	}
-	private Role role = Role.admin; 
+	private Role role = Role.client; 
 }

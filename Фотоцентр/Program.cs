@@ -1,4 +1,4 @@
-using Р¤РѕС‚РѕС†РµРЅС‚СЂ.Components;
+using Фотоцентр.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
