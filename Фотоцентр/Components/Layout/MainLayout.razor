@@ -1,7 +1,8 @@
 ﻿@inherits LayoutComponentBase
 
+
 <head>
-	<link href="Assets/Css/NavMenu.css" rel="stylesheet" type="text/css" />
+    <link href="Assets/Css/NavMenu.css" rel="stylesheet" type="text/css" />
 </head>
 
 <div id="blazor-error-ui">
@@ -11,46 +12,46 @@
 </div>
 
 <div class="page">
-	@switch (role)
-	{
-		case Role.admin:
-			{
-				<AdminNavMenu />
-				break;
-			}
-		case Role.client:
-			{
-				<ClientNavMenu />
-				break;
-			}
-		case Role.manager:
-			{
-				<ManagerNavMenu />
-				break;
-			}
-		case Role.photographer:
-			{
-				<PhotographerNavMenu />
-				break;
-			}
-		default:
-			{
-				break;
-			}
-	}
-	<script src="Scripts/Profile.js"></script>
+    @switch (role)
+    {
+        case Role.admin:
+            {
+                <AdminNavMenu />
+                break;
+            }
+        case Role.client:
+            {
+                <ClientNavMenu />
+                break;
+            }
+        case Role.manager:
+            {
+                <ManagerNavMenu />
+                break;
+            }
+        case Role.photographer:
+            {
+                <PhotographerNavMenu />
+                break;
+            }
+        default:
+            {
+                break;
+            }
+    }
+
+    @Body
 </div>
 
-@Body
-
 @code {
-	enum Role
-	{
-		none,
-		admin,
-		client,
-		manager,
-		photographer,
-	}
-	private Role role = Role.client; 
+    enum Role
+    {
+        none,
+        admin,
+        client,
+        manager,
+        photographer,
+    }
+
+    private Role role = Role.admin;
 }

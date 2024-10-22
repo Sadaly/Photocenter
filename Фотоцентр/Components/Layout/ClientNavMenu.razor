@@ -4,28 +4,7 @@
         <li><a href="/about" class="menu-link">О нас</a></li>
         <li><a href="/new-order" class="menu-link">Заказ</a></li>
         <li><a href="/my-orders" class="menu-link">Мои заказы</a></li>
-        <li>
-            <a href="#" class="menu-link" id="toggleDropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="bx bxs-user"></i>
-            </a>
-            <ul id="dropdownMenu" class="dropdown-content" style="display: none;">
-                <li><a href="/profile">Профиль</a></li>
-                <li>
-                    <a href="/balance" class="menu-link">
-                        <span style="letter-spacing: -1px;">
-                            Баланс: <span style="font-size: 0.8em;"> @balance </span> руб.
-                        </span>
-                    </a>
-                </li>
-                <li><a href="/login">Выход</a></li>
-            </ul>
-        </li>
+        <li><a href="/profile" class="menu-link"><i class="bx bxs-user"></i></a></li>
+        <li><a href="/login" class="menu-link"><i class='bx bx-log-in'></i></a></li>
     </ul>
 </div>
-
-
-
-
-@code {
-	decimal balance = 1200.50m; // Пример получения текущего баланса, его можно передать через контроллер
-}

@@ -5,25 +5,26 @@
     <link href="/Assets/Css/SendOrder.css" rel="stylesheet" type="text/css"/>
 </head>
 
-<form action="/submit" method="post" enctype="multipart/form-data">
-    <div>
-        <label for="imageFile">Загрузить изображение:</label>
-        <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
-    </div>
-
-    <div>
-        <label for="imageUrl">Или введите ссылку на изображение:</label>
-        <input type="url" id="imageUrl" name="imageUrl" placeholder="http://example.com/image.jpg">
-    </div>
-
-    <div>
-        <label for="comment">Комментарий:</label>
-        <textarea id="comment" name="comment" rows="4" placeholder="Введите ваш комментарий"></textarea>
-    </div>
-
-    <button type="submit">Отправить</button>
-</form>
-
+<div class="content">
+    <form action="/submit" method="post" enctype="multipart/form-data">
+        <div>
+            <label for="imageFile">Загрузить изображение:</label>
+            <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+        </div>
+    
+        <div>
+            <label for="imageUrl">Или введите ссылку на изображение:</label>
+            <input type="url" id="imageUrl" name="imageUrl" placeholder="http://example.com/image.jpg">
+        </div>
+    
+        <div>
+            <label for="comment">Комментарий:</label>
+            <textarea id="comment" name="comment" rows="4" placeholder="Введите ваш комментарий"></textarea>
+        </div>
+    
+        <button type="submit">Отправить</button>
+    </form>
+</div>
 @code {
 
 }

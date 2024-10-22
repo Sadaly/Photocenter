@@ -1,0 +1,63 @@
+﻿@page "/manage-orders"
+
+<PageTitle>Фотоцентр | Принятые заказы</PageTitle>
+
+<head runat="server">
+    <link href="Assets\Css\ManageOrders.css" rel="stylesheet" type="text/css" />
+</head>
+
+<div class="orders-container">
+    <!-- Поле для поиска или фильтрации -->
+    <div class="search-container">
+        <input type="text" id="searchByUser" placeholder="Поиск по имени пользователя">
+    </div>
+
+    <!-- Таблица заказов -->
+    <table id="ordersTable">
+        <thead>
+            <tr>
+                <th>Имя пользователя</th>
+                <th>Цена</th>
+                <th>Тип услуги</th>
+                <th>Описание</th>
+                <th>Изображение</th>
+                <th>Дата заказа</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Иван Иванов</td>
+                <td>1500 руб.</td>
+                <td>Фотосессия</td>
+                <td>Семейная фотосессия в парке</td>
+                <td><a href="#">Ссылка на изображение</a></td>
+                <td>2024-10-20</td>
+                <td><button class="assign-btn">Назначить фотографа</button></td>
+            </tr>
+            <tr>
+                <td>Анна Петрова</td>
+                <td>3000 руб.</td>
+                <td>Свадебная съемка</td>
+                <td>Фотосъемка на свадьбе</td>
+                <td><a href="#">Ссылка на изображение</a></td>
+                <td>2024-10-21</td>
+                <td><button class="assign-btn">Назначить фотографа</button></td>
+            </tr>
+            <tr>
+                <td>Сергей Сергеев</td>
+                <td>2000 руб.</td>
+                <td>Портретная съемка</td>
+                <td>Портреты на улице</td>
+                <td><a href="#">Ссылка на изображение</a></td>
+                <td>2024-10-22</td>
+                <td><button class="assign-btn">Назначить фотографа</button></td>
+            </tr>
+            <!-- Добавьте больше строк заказов при необходимости -->
+        </tbody>
+    </table>
+</div>
+
+@code {
+
+}

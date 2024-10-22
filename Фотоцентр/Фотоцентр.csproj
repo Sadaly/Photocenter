@@ -7,12 +7,24 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\Assets\Css\AcceptedOrders.css" />
+    <Content Remove="wwwroot\Assets\Css\Employee.css" />
+    <Content Remove="wwwroot\Assets\Css\Logs.css" />
+    <Content Remove="wwwroot\Assets\Css\ManageOrders.css" />
     <Content Remove="wwwroot\Assets\Css\MyOrders.css" />
     <Content Remove="wwwroot\Assets\Css\NavMenu.css" />
     <Content Remove="wwwroot\Assets\Css\NewOrder.css" />
+    <Content Remove="wwwroot\Assets\Css\Orders.css" />
+    <Content Remove="wwwroot\Assets\Css\Registration.css" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="wwwroot\Assets\Css\Employee.css" />
+    <None Include="wwwroot\Assets\Css\ManageOrders.css" />
+    <None Include="wwwroot\Assets\Css\AcceptedOrders.css" />
+    <None Include="wwwroot\Assets\Css\Logs.css" />
+    <None Include="wwwroot\Assets\Css\Orders.css" />
+    <None Include="wwwroot\Assets\Css\Registration.css" />
     <None Include="wwwroot\Assets\Css\NavMenu.css" />
     <None Include="wwwroot\Assets\Css\MyOrders.css" />
     <None Include="wwwroot\Assets\Css\NewOrder.css" />
@@ -32,6 +44,10 @@
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\Scripts\" />
   </ItemGroup>
 
 </Project>

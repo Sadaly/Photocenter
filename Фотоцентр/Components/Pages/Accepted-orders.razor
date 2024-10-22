@@ -1,0 +1,54 @@
+﻿@page "/orders-history"
+
+<PageTitle>Фотоцентр | Принятые заказы</PageTitle>
+
+<head runat="server">
+    <link href="Assets\Css\AcceptedOrders.css" rel="stylesheet" type="text/css" />
+</head>
+
+<div class="accepted-orders-container">
+    <!-- Поле для поиска или фильтрации -->
+    <div class="search-container">
+        <input type="text" id="searchByUser" placeholder="Поиск по имени пользователя">
+    </div>
+
+    <!-- Таблица принятых заказов -->
+    <table id="acceptedOrdersTable">
+        <thead>
+            <tr>
+                <th>Имя пользователя</th>
+                <th>Цена</th>
+                <th>Тип услуги</th>
+                <th>Описание</th>
+                <th>Изображение</th>
+                <th>Дата принятия</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Иван Иванов</td>
+                <td>1500 руб.</td>
+                <td>Дизайн логотипа</td>
+                <td>Создание логотипа для новой компании</td>
+                <td><a href="#">Ссылка на изображение</a></td>
+                <td>2024-10-20</td>
+                <td><button class="send-btn">Отправить</button></td>
+            </tr>
+            <tr>
+                <td>Анна Петрова</td>
+                <td>3000 руб.</td>
+                <td>Создание веб-сайта</td>
+                <td>Разработка сайта-визитки</td>
+                <td><a href="#">Ссылка на изображение</a></td>
+                <td>2024-10-21</td>
+                <td><button class="send-btn">Отправить</button></td>
+            </tr>
+            <!-- Добавьте больше строк заказов при необходимости -->
+        </tbody>
+    </table>
+</div>
+
+@code {
+
+}

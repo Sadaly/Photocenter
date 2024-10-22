@@ -1,0 +1,58 @@
+﻿.profile-container {
+    background-color: white;
+    padding: 20px;
+    max-width: 500px;
+    margin: 0 auto;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+input{
+    width: 95%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.editable-input {
+    width: 77%;
+}
+
+input[readonly] {
+    background-color: #f9f9f9;
+}
+
+.profile-actions {
+    display: flex;
+    justify-content: space-between;
+}
+
+.change-button {
+    float: right;
+}
+
+.action-button {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+    button:disabled {
+        background-color: #aaa;
+        cursor: not-allowed;
+    }

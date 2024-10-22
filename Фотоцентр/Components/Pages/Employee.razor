@@ -1,0 +1,63 @@
+﻿@page "/employee"
+
+<PageTitle>Фотоцентр | Сотрудники</PageTitle>
+
+<head runat="server">
+    <link href="Assets\Css\Employee.css" rel="stylesheet" type="text/css" />
+</head>
+
+<div class="employees-container">
+    <!-- Поле для поиска или фильтрации -->
+    <div class="search-container">
+        <input type="text" id="searchByName" placeholder="Поиск по имени сотрудника">
+    </div>
+
+    <!-- Таблица сотрудников -->
+    <table id="employeesTable">
+        <thead>
+            <tr>
+                <th>Имя</th>
+                <th>ID</th>
+                <th>Доход за неделю</th>
+                <th>Рейтинг фотографа</th>
+                <th>Количество выполненных заказов</th>
+                <th>Количество принятых заказов</th>
+                <th>Количество текущих заказов</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Иван Иванов</td>
+                <td>001</td>
+                <td>25000 руб.</td>
+                <td>4.5</td>
+                <td>15</td>
+                <td>10</td>
+                <td>5</td>
+            </tr>
+            <tr>
+                <td>Анна Петрова</td>
+                <td>002</td>
+                <td>30000 руб.</td>
+                <td>4.8</td>
+                <td>20</td>
+                <td>15</td>
+                <td>5</td>
+            </tr>
+            <tr>
+                <td>Сергей Сергеев</td>
+                <td>003</td>
+                <td>22000 руб.</td>
+                <td>4.3</td>
+                <td>10</td>
+                <td>8</td>
+                <td>2</td>
+            </tr>
+            <!-- Добавьте больше сотрудников при необходимости -->
+        </tbody>
+    </table>
+</div>
+
+@code {
+
+}
