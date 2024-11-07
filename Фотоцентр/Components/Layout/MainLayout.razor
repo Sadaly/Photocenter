@@ -1,5 +1,5 @@
 ﻿@inherits LayoutComponentBase
-
+@inject NavigationManager NavigationManager
 
 <head>
     <link href="Assets/Css/NavMenu.css" rel="stylesheet" type="text/css" />
@@ -12,46 +12,7 @@
 </div>
 
 <div class="page">
-    @switch (role)
-    {
-        case Role.admin:
-            {
-                <AdminNavMenu />
-                break;
-            }
-        case Role.client:
-            {
-                <ClientNavMenu />
-                break;
-            }
-        case Role.manager:
-            {
-                <ManagerNavMenu />
-                break;
-            }
-        case Role.photographer:
-            {
-                <PhotographerNavMenu />
-                break;
-            }
-        default:
-            {
-                break;
-            }
-    }
-
+    <NavMenu/>
     @Body
+
 </div>
-
-@code {
-    enum Role
-    {
-        none,
-        admin,
-        client,
-        manager,
-        photographer,
-    }
-
-    private Role role = Role.admin;
-}

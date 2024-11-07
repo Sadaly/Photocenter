@@ -1,0 +1,31 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "admin, client, manager, photographer")]
+
+<div class="nav-menu">
+	<ul class="nav-bar">
+		<li><a href="/" class="menu-link">Главная</a></li>
+		<li><a href="/about" class="menu-link">О нас</a></li>
+		<AuthorizeView Roles="admin">
+			<li><a href="/logs" class="menu-link">Журнал</a></li>
+			<li><a href="/users" class="menu-link">Пользователи</a></li>
+		</AuthorizeView>
+		<AuthorizeView Roles="manager, admin">
+			<li><a href="/employee" class="menu-link">Сотрудники</a></li>
+		</AuthorizeView>
+		<AuthorizeView Roles="manager">
+			<li><a href="/manage-orders" class="menu-link">Распределение</a></li>
+		</AuthorizeView>
+		<AuthorizeView Roles="client">
+			<li><a href="/new-order" class="menu-link">Заказ</a></li>
+			<li><a href="/my-orders" class="menu-link">Мои заказы</a></li>
+		</AuthorizeView>
+		<AuthorizeView Roles="photographer">
+			<li><a href="/avaliable-orders" class="menu-link">Доступное</a></li>
+			<li><a href="/complete-orders" class="menu-link">Принятое</a></li>
+		</AuthorizeView>
+		<AuthorizeView Roles="client, photographer">
+			<li><a href="/profile" class="menu-link"><i class="bx bxs-user"></i></a></li>
+		</AuthorizeView>
+		<li><a href="/login" class="menu-link"><i class="bx bxs-log-in"></i></a></li>
+	</ul>
+</div>

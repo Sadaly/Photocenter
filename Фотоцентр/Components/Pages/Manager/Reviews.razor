@@ -1,0 +1,43 @@
+﻿@page "/reviews"
+
+<PageTitle>Фотоцентр | Регистрация</PageTitle>
+
+<head runat="server">
+    <link href="Assets\Css\Reviews.css" rel="stylesheet" type="text/css" />
+</head>
+
+<div class="container">
+    <h2>Отзывы о фотографе Иван Петров</h2>
+
+    <!-- Один отзыв -->
+    <div class="review-item">
+        <div class="review-header">
+            <p class="client-info">Клиент: Алексей Иванов (ID: 123)</p>
+            <p class="review-date">Дата: 2024-10-10</p>
+        </div>
+        <div class="review-rating">
+            <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">☆</span>
+        </div>
+        <div class="review-content">
+            Отличная работа! Фотографии превзошли все мои ожидания, буду рекомендовать друзьям!
+        </div>
+        <button class="delete-button">Удалить</button>
+    </div>
+
+    <!-- Другой отзыв -->
+    <div class="review-item">
+        <div class="review-header">
+            <p class="client-info">Клиент: Мария Смирнова (ID: 456)</p>
+            <p class="review-date">Дата: 2024-09-25</p>
+        </div>
+        <div class="review-rating">
+            <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+        </div>
+        <div class="review-content">
+            Спасибо за чудесные фотографии, очень довольна результатом!
+        </div>
+        <button class="delete-button">Удалить</button>
+    </div>
+
+    <!-- Добавить больше отзывов таким же образом -->
+</div>

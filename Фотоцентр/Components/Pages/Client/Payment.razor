@@ -1,0 +1,39 @@
+﻿@page "/payment"
+
+<PageTitle>Фотоцентр | Новый заказ</PageTitle>
+
+<head runat="server">
+    <link href="Assets\Css\Payment.css" rel="stylesheet" type="text/css" />
+</head>
+
+<div class="payment-container">
+    <h2>Оплата услуги</h2>
+
+    <div class="form-group">
+        <label for="cardholder">Имя держателя карты</label>
+        <input type="text" id="cardholder" name="cardholder" placeholder="Введите имя держателя карты" required>
+    </div>
+
+    <div class="form-group">
+        <label for="cardnumber">Номер карты</label>
+        <input type="text" id="cardnumber" name="cardnumber" placeholder="Введите номер карты" maxlength="16" required>
+    </div>
+
+    <div class="form-group">
+        <label for="expiry">Дата окончания (MM/YY)</label>
+        <input type="text" id="expiry" name="expiry" placeholder="MM/YY" maxlength="5" required>
+    </div>
+
+    <div class="form-group">
+        <label for="cvv">CVV</label>
+        <input type="text" id="cvv" name="cvv" placeholder="CVV" maxlength="3" required>
+    </div>
+
+    <div class="total-price">Итоговая сумма: 500 ₽</div>
+
+    <button class="payment-button">Оплатить</button>
+</div>
+
+@code {
+
+}

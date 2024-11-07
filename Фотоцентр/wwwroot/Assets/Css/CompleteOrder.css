@@ -1,0 +1,108 @@
+﻿.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.order-details {
+    margin-bottom: 20px;
+}
+
+    .order-details img {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+
+    .order-details .photo-link {
+        display: block;
+        margin-top: 10px;
+        text-align: center;
+        color: #007bff;
+        font-size: 16px;
+        text-decoration: none;
+    }
+
+        .order-details .photo-link:hover {
+            text-decoration: underline;
+        }
+
+.photographer-info {
+    margin-top: 20px;
+}
+
+    .photographer-info strong {
+        color: #555;
+    }
+
+.photographer-comment {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 10px;
+    color: #555;
+    font-style: italic;
+}
+
+.review-section {
+    margin-top: 30px;
+}
+
+    .review-section textarea {
+        width: 100%;
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        resize: vertical;
+    }
+
+.star-rating {
+    direction: rtl;
+    display: inline-flex;
+    font-size: 30px;
+    margin-top: 20px;
+    justify-content: center;
+}
+
+    .star-rating input {
+        display: none;
+    }
+
+    .star-rating label {
+        color: #ccc;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+        .star-rating input:checked ~ label,
+        .star-rating input:hover ~ label,
+        .star-rating label:hover ~ label {
+            color: #ffc107;
+        }
+
+.submit-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 15px;
+    width: 100%;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+    .submit-button:hover {
+        background-color: #218838;
+    }

@@ -8,17 +8,25 @@
 
   <ItemGroup>
     <Content Remove="wwwroot\Assets\Css\AcceptedOrders.css" />
+    <Content Remove="wwwroot\Assets\Css\CompleteOrder.css" />
     <Content Remove="wwwroot\Assets\Css\Employee.css" />
     <Content Remove="wwwroot\Assets\Css\Logs.css" />
     <Content Remove="wwwroot\Assets\Css\ManageOrders.css" />
     <Content Remove="wwwroot\Assets\Css\MyOrders.css" />
     <Content Remove="wwwroot\Assets\Css\NavMenu.css" />
     <Content Remove="wwwroot\Assets\Css\NewOrder.css" />
+    <Content Remove="wwwroot\Assets\Css\NotCompleteOrder.css" />
     <Content Remove="wwwroot\Assets\Css\Orders.css" />
+    <Content Remove="wwwroot\Assets\Css\Payment.css" />
     <Content Remove="wwwroot\Assets\Css\Registration.css" />
+    <Content Remove="wwwroot\Assets\Css\Reviews.css" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="wwwroot\Assets\Css\NotCompleteOrder.css" />
+    <None Include="wwwroot\Assets\Css\CompleteOrder.css" />
+    <None Include="wwwroot\Assets\Css\Reviews.css" />
+    <None Include="wwwroot\Assets\Css\Payment.css" />
     <None Include="wwwroot\Assets\Css\Employee.css" />
     <None Include="wwwroot\Assets\Css\ManageOrders.css" />
     <None Include="wwwroot\Assets\Css\AcceptedOrders.css" />
@@ -33,9 +41,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="Components\Layout\PhotographerNavMenu.razor">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-    </Content>
     <Content Update="wwwroot\Assets\Css\SendOrder.css">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
@@ -48,6 +53,16 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\Scripts\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazor.Bootstrap" Version="3.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.10">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.6" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,82 @@
+﻿@page "/registration"
+@using Фотоцентр.Components.Classes
+@using Фотоцентр.Components.Layout
+@using Фотоцентр.Data
+@using Фотоцентр.Models
+@inject AppDBContext appDBContext
+@layout EmptyLayout
+@inject NavigationManager NavManager
+@rendermode RenderMode.InteractiveServer
+
+<PageTitle>Фотоцентр | Регистрация</PageTitle>
+
+<head runat="server">
+    <link href="Assets\Css\Registration.css" rel="stylesheet" type="text/css" />
+</head>
+
+<form class="registration-form" >
+    <h2>Регистрация</h2>
+
+    <label for="name">Имя</label>
+    <input type="text" @bind="name" placeholder="Введите ваше имя" required>
+
+    <label for="email">Почта</label>
+    <input type="email" @bind="email" placeholder="Введите вашу почту" required>
+
+    <label for="password">Пароль</label>
+    <InputText type="password" @bind-Value="password" placeholder="Введите пароль" required/>
+
+    <label for="phone">Телефон</label>
+    <input type="tel" @bind="phone" placeholder="Введите ваш телефон (не обязательно)">
+
+    <label for="address">Адрес</label>
+    <input type="text" @bind="address" placeholder="Введите ваш адрес (не обязательно)">
+
+    <button type="submit" @onclick="Register">Зарегистрироваться</button>
+
+</form>
+
+@code{
+    public string name;
+    public string email;
+    public string password;
+    public string phone;
+    public string address;
+
+    private async Task Register()
+    {
+        Console.WriteLine($"Name: {name}");
+        Console.WriteLine($"Email: {email}");
+        Console.WriteLine($"Password: {password}");
+        Console.WriteLine($"Phone: {phone}");
+        Console.WriteLine($"Address: {address}");
+        Console.WriteLine("Метод вызван");
+        // Устанавливаем значение текущей даты
+        var date = DateOnly.FromDateTime(DateTime.Now);
+
+        // Создаем нового пользователя с использованием локальных переменных
+        var user = new User
+            {
+                UserName = name,
+                Role = "client",
+                Password_Hash = password,
+            };
+        
+        try{
+            appDBContext.Users.Add(user);
+            await appDBContext.SaveChangesAsync();
+            NavManager.NavigateTo("/login");
+        }
+        catch (Exception ex)
+        {
+            // Обработка ошибок, например, вывод ошибки на экран или логирование
+            Console.WriteLine($"Ошибка регистрации: {ex.Message}");
+        }
+
+    }
+    private void UpdatePassword(ChangeEventArgs e)
+    {
+        password = e.Value.ToString();
+        Console.WriteLine($"Updated password: {password}");
+    }
+}

@@ -1,0 +1,98 @@
+﻿@page "/Login"
+
+@using Фотоцентр.Data
+@using Фотоцентр.Models.ViewModels
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Фотоцентр.Components.Layout
+@layout EmptyLayout
+@inject AppDBContext appDBContext
+@inject NavigationManager navigationManager
+@inject IJSRuntime JsRuntime
+
+<PageTitle>Фотоцентр | Вход в учетную запись</PageTitle>
+
+<head runat="server">
+    <link href="Assets\Css\Login.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <!-- Форма логина с привязкой к модели -->
+    <EditForm Model="@Model" OnValidSubmit="Authenticate" autocomplete="off" FormName="loginForm">
+        <div class="wrapper">
+            <DataAnnotationsValidator />
+            <h1>Вход</h1>
+            <div class="input-box">
+                <InputText type="text" placeholder="Логин" @bind-Value="Model.UserName" required />
+                <ValidationMessage For="() => Model.UserName" />
+                <i class='bx bxs-user'></i>
+            </div>
+
+            <div class="input-box">
+                <InputText type="password" placeholder="Пароль" @bind-Value="Model.Password" required />
+                <ValidationMessage For="() => Model.Password" />
+                <i class='bx bxs-lock-alt'></i>
+            </div>
+
+            <div class="remember-forgot">
+                <label><input type="checkbox" />Запомнить меня</label>
+                <a href="#">Забыли пароль?</a>
+            </div>
+
+            <button type="submit" class="btn">Войти</button>
+            <div class="register-link">
+                <p>Нет аккаунта? <a href="/registration">Регистрация</a></p>
+            </div>
+
+           
+            
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                    <div class="error-message"> @errorMessage </div>
+            }
+        </div>
+    </EditForm>
+</body>
+
+@code {
+    [CascadingParameter]
+    public HttpContext HttpContext { get; set; }
+
+    [SupplyParameterFromForm]
+    public LoginViewModel Model { get; set; } = new();
+
+    private string? errorMessage;
+
+    private async Task Authenticate()
+    {
+        var userAccount = appDBContext.Users.FirstOrDefault(x => x.UserName == Model.UserName);
+        if (userAccount is null || userAccount.Password_Hash != Model.Password)
+        {
+            errorMessage = "Неверное имя пользователя или пароль";
+        }
+        else
+        {
+            errorMessage = "";
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, Model.UserName ),
+                new Claim(ClaimTypes.Role, userAccount.Role),
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+            await HttpContext.SignInAsync(principal);
+            navigationManager.NavigateTo("/");
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if (HttpContext.User.Identity.IsAuthenticated)
+        {
+            await HttpContext.SignOutAsync();
+            navigationManager.NavigateTo("/login", true);
+        }
+    }
+}

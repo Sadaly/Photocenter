@@ -1,4 +1,6 @@
-﻿@page "/orders-history"
+﻿@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "photographer")]
+@page "/orders-history"
 
 <PageTitle>Фотоцентр | Принятые заказы</PageTitle>
 

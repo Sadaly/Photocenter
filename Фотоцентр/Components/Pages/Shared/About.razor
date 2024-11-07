@@ -1,4 +1,6 @@
-﻿@page "/about"
+﻿@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "admin, client, manager, photographer")]
+@page "/about"
 
 <PageTitle>Фотоцентр | О нас</PageTitle>
 
