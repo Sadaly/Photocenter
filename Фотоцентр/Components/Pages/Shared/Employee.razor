@@ -1,5 +1,12 @@
 ﻿@page "/employee"
 
+@rendermode RenderMode.InteractiveServer
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IActionLogger ActionLogger
+@inject IHttpContextAccessor HttpContextAccessor
+@attribute [Authorize(Roles = "admin, manager")]
+
+
 <PageTitle>Фотоцентр | Сотрудники</PageTitle>
 
 <head runat="server">
@@ -9,55 +16,37 @@
 <div class="employees-container">
     <!-- Поле для поиска или фильтрации -->
     <div class="search-container">
-        <input type="text" id="searchByName" placeholder="Поиск по имени сотрудника">
+        <input type="text" placeholder="ID" @bind="userIdFilter" @bind:event="oninput" />
+        <input type="text" placeholder="Имя" @bind="UsernameFilter" @bind:event="oninput" />
     </div>
 
     <!-- Таблица сотрудников -->
-    <table id="employeesTable">
-        <thead>
-            <tr>
-                <th>Имя</th>
-                <th>ID</th>
-                <th>Доход за неделю</th>
-                <th>Рейтинг фотографа</th>
-                <th>Количество выполненных заказов</th>
-                <th>Количество принятых заказов</th>
-                <th>Количество текущих заказов</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Иван Иванов</td>
-                <td>001</td>
-                <td>25000 руб.</td>
-                <td>4.5</td>
-                <td>15</td>
-                <td>10</td>
-                <td>5</td>
-            </tr>
-            <tr>
-                <td>Анна Петрова</td>
-                <td>002</td>
-                <td>30000 руб.</td>
-                <td>4.8</td>
-                <td>20</td>
-                <td>15</td>
-                <td>5</td>
-            </tr>
-            <tr>
-                <td>Сергей Сергеев</td>
-                <td>003</td>
-                <td>22000 руб.</td>
-                <td>4.3</td>
-                <td>10</td>
-                <td>8</td>
-                <td>2</td>
-            </tr>
-            <!-- Добавьте больше сотрудников при необходимости -->
-        </tbody>
-    </table>
+    <QuickGrid Items="FilteredPhotographers">
+        <PropertyColumn Property="@(p => p.User_Id)" />
+        <PropertyColumn Property="@(p => p.Username)" />
+        <PropertyColumn Property="@(p => p.Rating)" />
+        <PropertyColumn Property="@(p => p.Orders_In_Progress)" />
+        <PropertyColumn Property="@(p => p.Orders_Complete)" />
+    </QuickGrid>
 </div>
 
 @code {
+    private AppDbContext context = default!;
 
+    private string userIdFilter = "";
+    private string UsernameFilter = "";
+
+    PaginationState pagination = new PaginationState { ItemsPerPage = 20 };
+
+    private IQueryable<Photographer> FilteredPhotographers=>
+        context.Photographers.Where(a => (a.User_Id.ToString().Contains(userIdFilter) && !userIdFilter.Contains(" "))
+        || (userIdFilter.Contains(" ") && a.User_Id.ToString().Equals(userIdFilter))).
+        Where(a => a.Username.Contains(UsernameFilter));
+
+
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
 }

@@ -1,14 +1,19 @@
-﻿@page "/profile"
+﻿@page "/user-details/{user_id:int}"
 @rendermode RenderMode.InteractiveServer
 @inject IDbContextFactory<AppDbContext> DbFactory
-@attribute [Authorize(Roles = "client")]
-@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager navigationManager
+@attribute [Authorize(Roles = "admin")]
 
-<PageTitle>Фотоцентр | Профиль</PageTitle>
+<PageTitle>Фотоцентр | Информация о пользователе</PageTitle>
 
 <head runat="server">
     <link href="Assets\Css\Profile.css" rel="stylesheet" type="text/css" />
 </head>
+
+@if (context.Clients.FirstOrDefault(c => c.User_Id == user_id) == null)
+{
+    navigationManager.NavigateTo("/users", true);    
+}
 
 <div class="content">
 
@@ -17,7 +22,7 @@
 
         <form id="profileForm">
             <label for="clientId">Номер клиента:</label>
-            <input type="text" id="clientId" class="not-editable-input" value=@userId readonly>
+            <input type="text" id="clientId" class="not-editable-input" value=@user_id readonly>
 
             <label for="clientName">Имя:</label>
             <input type="text" id="clientName" class="not-editable-input" value=@clientName readonly>
@@ -26,27 +31,23 @@
             <input type="email" id="email" class="not-editable-input" value=@email readonly>
 
             <label for="phone">Телефон:</label>
-            <input type="tel" id="phone" class="editable-input" @bind="phone">
+            <input type="tel" id="phone" class="not-editable-input" value=@phone readonly>
 
             <label for="address">Адрес:</label>
-            <input type="text" id="address" class="editable-input" @bind="address">
+            <input type="text" id="address" class="not-editable-input" value=@address readonly>
 
             <label for="regDate">Дата регистрации:</label>
             <input type="text" id="regDate" class="not-editable-input" value=@regDate readonly>
-
-            <div class="profile-actions">
-                <button type="button" @onclick="DiscardChanges" class="action-button">Сбросить</button>
-                <button type="button" @onclick="SaveChanges" class="action-button">Сохранить изменения</button>
-            </div>
         </form>
     </div>
 
 </div>
 
 @code {
+    [Parameter]
+    public int user_id { get; set; }
     private AppDbContext context = default!;
 
-    private string? userId;
     User? user;
     Client? client;
 
@@ -58,32 +59,15 @@
 
     protected override void OnInitialized()
     {
-        userId = HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
         context = DbFactory.CreateDbContext();
 
-        user = context.Users.FirstOrDefault(u => u.User_Id.ToString() == userId);
-        client = context.Clients.FirstOrDefault(c => c.User_Id.ToString() == userId);
+        user = context.Users.FirstOrDefault(u => u.User_Id == user_id);
+        client = context.Clients.FirstOrDefault(c => c.User_Id == user_id);
 
         clientName = user?.Username;
         email = client?.Email;
         phone = client?.Phone;
         address = client?.Address;
         regDate = user?.Date_Registered.ToString();
-    }
-
-    private void DiscardChanges()
-    {
-        phone = client?.Phone;
-        address = client?.Address;
-    }
-    private void SaveChanges()
-    {
-        if (client != null)
-        {
-            client.Address = address;
-            client.Phone = phone;
-            context.Clients.Update(client);
-            context.SaveChanges();
-        }
     }
 }

@@ -1,11 +1,8 @@
 ﻿@page "/registration"
-@using Фотоцентр.Components.Classes
-@using Фотоцентр.Components.Layout
-@using Фотоцентр.Data
-@using Фотоцентр.Models
-@inject AppDBContext appDBContext
+@inject AppDbContext AppDbContext
 @layout EmptyLayout
 @inject NavigationManager NavManager
+@inject IActionLogger ActionLogger
 @rendermode RenderMode.InteractiveServer
 
 <PageTitle>Фотоцентр | Регистрация</PageTitle>
@@ -14,69 +11,134 @@
     <link href="Assets\Css\Registration.css" rel="stylesheet" type="text/css" />
 </head>
 
-<form class="registration-form" >
-    <h2>Регистрация</h2>
+<form class="registration-form" @onsubmit="Register" method="post">
+    <div class="wrapper">
+        <h2>Регистрация</h2>
 
-    <label for="name">Имя</label>
-    <input type="text" @bind="name" placeholder="Введите ваше имя" required>
+        <label for="name">Имя Пользователя</label>
+        <input type="text" id="name" @bind="Username" @oninput="CheckUsername" placeholder="Введите ваше имя" required />
+        @if (!string.IsNullOrEmpty(UsernameError))
+        {
+            <div style="color: red; margin-top: -10px; margin-bottom: 5px;">@UsernameError</div>
+        }
+        @if (string.IsNullOrEmpty(UsernameError))
+        {
+            <div style="color: green;  margin-top: -10px; margin-bottom: 5px;">Имя пользователя свободно</div>
+        }
 
-    <label for="email">Почта</label>
-    <input type="email" @bind="email" placeholder="Введите вашу почту" required>
+        <label for="email">Почта</label>
+        <input type="email" id="email" @bind="email" @oninput="CheckEmail" placeholder="Введите вашу почту" required  />
+        @if (!string.IsNullOrEmpty(emailError))
+        {
+            <div style="color: red; margin-top: -10px; margin-bottom: 5px;">@emailError</div>
+        }
+        @if (string.IsNullOrEmpty(emailError))
+        {
+            <div style="color: green;  margin-top: -10px; margin-bottom: 5px;">Почта не занята</div>
+        }
 
-    <label for="password">Пароль</label>
-    <InputText type="password" @bind-Value="password" placeholder="Введите пароль" required/>
+        <label for="password">Пароль</label>
+        <input type="password" id="password" value="@password" @oninput="UpdatePassword" placeholder="Введите пароль" 
+            minlength="8" required
+            pattern="(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}"
+               title="Пароль должен содержать минимум 8 символов, включая буквы и цифры">
 
-    <label for="phone">Телефон</label>
-    <input type="tel" @bind="phone" placeholder="Введите ваш телефон (не обязательно)">
+        <label for="phone">Телефон</label>
+        <input type="tel" id="phone" @bind="phone" placeholder="Введите номер телефона (не обязательно)">
 
-    <label for="address">Адрес</label>
-    <input type="text" @bind="address" placeholder="Введите ваш адрес (не обязательно)">
+        <label for="address">Адрес</label>
+        <input type="text" id="address" @bind="address" placeholder="Введите адрес (не обязательно)">
 
-    <button type="submit" @onclick="Register">Зарегистрироваться</button>
-
+        <button type="submit">Зарегистрироваться</button>
+    </div>
 </form>
 
 @code{
-    public string name;
-    public string email;
-    public string password;
-    public string phone;
-    public string address;
+    public string? Username;
+    public string? password;
+    public string? email;
+
+    public string? phone;
+    public string? address;
+
+    private string? emailError;
+    private string? UsernameError;
+
+
 
     private async Task Register()
     {
-        Console.WriteLine($"Name: {name}");
-        Console.WriteLine($"Email: {email}");
-        Console.WriteLine($"Password: {password}");
-        Console.WriteLine($"Phone: {phone}");
-        Console.WriteLine($"Address: {address}");
-        Console.WriteLine("Метод вызван");
-        // Устанавливаем значение текущей даты
-        var date = DateOnly.FromDateTime(DateTime.Now);
-
-        // Создаем нового пользователя с использованием локальных переменных
-        var user = new User
-            {
-                UserName = name,
-                Role = "client",
-                Password_Hash = password,
-            };
-        
-        try{
-            appDBContext.Users.Add(user);
-            await appDBContext.SaveChangesAsync();
-            NavManager.NavigateTo("/login");
-        }
-        catch (Exception ex)
+        var date = DateTime.Now;
+        if (Username != null && password != null && email != null) 
         {
-            // Обработка ошибок, например, вывод ошибки на экран или логирование
-            Console.WriteLine($"Ошибка регистрации: {ex.Message}");
+            var user = new User
+                {
+                    Username = Username,
+                    Role = "client",
+                    Password_Hash = PasswordHelper.HashPassword(password),
+                    Date_Registered = date,
+                };
+
+            await AppDbContext.Users.AddAsync(user);
+            await AppDbContext.SaveChangesAsync();
+
+
+            var client = new Client
+                {
+                    User_Id = user.User_Id,
+                    Email = email,
+                    Phone = phone,
+                    Address = address,
+                };
+
+            try
+            {
+                await AppDbContext.Clients.AddAsync(client);
+                await AppDbContext.SaveChangesAsync();
+
+                await ActionLogger.LogActionAsync(user.User_Id,
+                "Регистрация",
+                $"Имя: {Username}, Почта: {email}, Телефон: {phone}, Адрес: {address}",
+                "Clients",
+                "info");
+
+                NavManager.NavigateTo("/login");
+            }
+            catch (Exception ex)
+            {
+                await ActionLogger.LogActionAsync(user.User_Id,
+                "Регистрация",
+                $"Исключение: {ex.Message}",
+                "Clients",
+                "error");
+            }
         }
 
     }
     private void UpdatePassword(ChangeEventArgs e)
     {
-        password = e.Value.ToString();
-        Console.WriteLine($"Updated password: {password}");
+        password = e.Value?.ToString() ?? null;
+    }
+
+    private async Task CheckEmail(ChangeEventArgs e)
+    {
+        email = e.Value?.ToString() ?? null;
+
+        using (var context = new AppDbContext())
+        {
+            var existingEmail = await context.Clients.FirstOrDefaultAsync(u => u.Email == email);
+            emailError = existingEmail != null ? "Почта уже используется" : null;
+        }
+    }
+
+    private async Task CheckUsername(ChangeEventArgs e)
+    {
+        Username = e.Value?.ToString() ?? null;
+
+        using (var context = new AppDbContext())
+        {
+            var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Username == Username);
+            UsernameError = existingUser != null ? "Имя пользователя занято" : null;
+        }
     }
 }

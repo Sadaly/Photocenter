@@ -1,52 +1,115 @@
 ﻿@page "/users"
 
-<PageTitle>Фотоцентр | О нас</PageTitle>
+@rendermode RenderMode.InteractiveServer
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IActionLogger ActionLogger
+@inject IHttpContextAccessor HttpContextAccessor
+@attribute [Authorize(Roles = "admin")]
+
+<PageTitle>Фотоцентр | Пользователи</PageTitle>
 <head>
     <link href="Assets/Css/Users.css" rel="stylesheet" type="text/css"/>
 </head>
 
-<div class="content">
-    <h1>Список пользователей системы</h1>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Имя</th>
-                <th>Email</th>
-                <th>Роль</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>1</td>
-                <td>Иван Иванов</td>
-                <td>ivan@example.com</td>
-                <td>Администратор</td>
-            </tr>
-            <tr>
-                <td>2</td>
-                <td>Мария Петрова</td>
-                <td>maria@example.com</td>
-                <td>Пользователь</td>
-            </tr>
-            <tr>
-                <td>3</td>
-                <td>Алексей Смирнов</td>
-                <td>alex@example.com</td>
-                <td>Управляющий</td>
-            </tr>
-            <tr>
-                <td>4</td>
-                <td>Ольга Сидорова</td>
-                <td>olga@example.com</td>
-                <td>Пользователь</td>
-            </tr>
-        </tbody>
-    </table>
+<div class="user-container ">
+    <div class="search-container">
+        <input type="text" placeholder="ID" @bind="userIdFilter" @bind:event="oninput" />
+        <input type="text" placeholder="Имя" @bind="UsernameFilter" @bind:event="oninput" />
+        <input type="text" placeholder="Роль" @bind="userRoleFilter" @bind:event="oninput" />
+        <input type="text" placeholder="Дата регистрации" @bind="dateRegisteredFilter" @bind:event="oninput" />
+    </div>
+    
+    <Paginator State="pagination" />
+
+    <QuickGrid Items="FilteredUsers" Pagination="pagination">
+        <PropertyColumn Property="@(u => u.User_Id)" Sortable="true" />
+        <TemplateColumn Title="User ID">
+            @if (context.Role == "client")
+            {
+                <a href="/user-details/@context.User_Id">@context.User_Id</a>                
+            }
+            @if (context.Role != "client")
+            {
+                <div>@context.User_Id</div>
+            }
+        </TemplateColumn>
+        <PropertyColumn Property="@(u => u.Username)" Sortable="true" />
+        <PropertyColumn Property="@(u => u.Role)" Sortable="true" />
+        <PropertyColumn Property="@(u => u.Date_Registered)" Format="yyyy-MM-dd:hh-mm-ss" Sortable="true" />
+        <TemplateColumn Title="User ID">
+            <select @onchange="e => UpdateUserRole(e, context.User_Id)">
+                    @foreach (var role in AvailableRoles)
+                    {
+                        <option value="@role" selected="@(context.Role == role)">@role</option>
+                    }
+            </select>
+        </TemplateColumn>
+    </QuickGrid>
+
 
 </div>
 
 @code {
+    private AppDbContext context = default!;
 
+    private string userIdFilter = "";
+    private string UsernameFilter = "";
+    private string userRoleFilter = "";
+    private string dateRegisteredFilter = "";
+
+    PaginationState pagination = new PaginationState { ItemsPerPage = 20 };
+
+    private IQueryable<User> FilteredUsers=>
+        context.Users.Where(a => (a.User_Id.ToString().Contains(userIdFilter) && !userIdFilter.Contains(" ")) 
+        || (userIdFilter.Contains(" ") && a.User_Id.ToString().Equals(userIdFilter))).
+        Where(a => a.Username.Contains(UsernameFilter)).
+        Where(a => a.Role.Contains(userRoleFilter)).
+        Where(a => a.Date_Registered.ToString()!.Contains(dateRegisteredFilter));
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    private List<string> AvailableRoles = new List<string> { "admin", "client", "manager", "photographer" };
+
+    private void UpdateUserRole(ChangeEventArgs e, int userId)
+    {
+        var user = context.Users.FirstOrDefault(u => u.User_Id == userId);
+        if (user != null)
+        {
+            var oldRole = user.Role;
+            user.Role = e.Value?.ToString() ?? "client";
+
+            if (e.Value?.ToString() == "photographer")
+            {
+                if (context.Photographers.FirstOrDefault(p => p.User_Id == userId) == null)
+                {
+                    var photographer = new Photographer
+                        {
+                            User_Id = userId,
+                            Username = user.Username,
+                            Rating = 0,
+                            Orders_Complete = 0,
+                            Orders_In_Progress = 0,
+                        };
+
+                    context.Photographers.Add(photographer);
+                    context.SaveChanges();
+                }
+            }
+
+            context.Users.Update(user);
+            context.SaveChanges();
+            var thisUserId = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            StateHasChanged();
+            ActionLogger.LogActionAsync(thisUserId,
+                "Изменение роли",
+                $"Пользователь: {user.User_Id}, Новая роль: {user.Role}, Старая роль: {oldRole}",
+                "Users",
+                "info");
+        }
+    }
 }

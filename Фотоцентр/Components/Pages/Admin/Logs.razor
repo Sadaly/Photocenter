@@ -1,77 +1,69 @@
 ﻿@page "/logs"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.EntityFrameworkCore
+@using Фотоцентр.Data
+@using Фотоцентр.Models
+@rendermode RenderMode.InteractiveServer
+@inject IDbContextFactory<AppDbContext> DbFactory
+@attribute [Authorize(Roles = "admin")]
 
-<PageTitle>Фотоцентр | О нас</PageTitle>
+<PageTitle>Фотоцентр | Журнал</PageTitle>
 
 <head runat="server">
     <link href="Assets\Css\Logs.css" rel="stylesheet" type="text/css" />
 </head>
 
 <div class="log-container">
-    <!-- Поля для поиска или фильтрации -->
     <div class="search-container">
-        <input type="text" id="searchById" placeholder="Поиск по ID лога">
-        <input type="text" id="searchByUser" placeholder="Поиск по ID пользователя">
+        <input type="text" placeholder="ID лога" @bind="logIdFilter" @bind:event="oninput" />
+        <input type="text" placeholder="ID пользователя" @bind="userIdFilter" @bind:event="oninput" />
+        <input type="text" placeholder="Действие" @bind="actionTypeFilter" @bind:event="oninput" />
+        <input type="text" placeholder="Время" @bind="actionTimestampFilter" @bind:event="oninput" />
+        <input type="text" placeholder="Детали" @bind="detailsFilter" @bind:event="oninput" />
+        <input type="text" placeholder="Таблица" @bind="tableNameFilter" @bind:event="oninput" />
+        <input type="text" placeholder="Серьезность" @bind="severityLevelFilter" @bind:event="oninput" />
     </div>
 
-    <!-- Таблица логов -->
-    <table id="logTable">
-        <thead>
-            <tr>
-                <th onclick="sortTable(0)">ID лога</th>
-                <th onclick="sortTable(1)">ID пользователя</th>
-                <th onclick="sortTable(2)">Тип действия</th>
-                <th onclick="sortTable(3)">Дата</th>
-                <th onclick="sortTable(4)">Детали</th>
-                <th onclick="sortTable(5)">Название таблицы</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>1</td>
-                <td>101</td>
-                <td>Добавление</td>
-                <td>2024-10-20</td>
-                <td>Заказ создан</td>
-                <td>-</td>
-            </tr>
-            <tr>
-                <td>2</td>
-                <td>102</td>
-                <td>Удаление</td>
-                <td>2024-10-21</td>
-                <td>Заказ отправлен</td>
-                <td>-</td>
-            </tr>
-            <!-- Примерные данные, можно добавить еще -->
-        </tbody>
-    </table>
+    <Paginator State="pagination" />
+
+    <QuickGrid Items="FilteredActionLogs" Pagination="pagination">
+        <PropertyColumn Property="@(a => a.Log_Id)" Sortable="true" />
+        <PropertyColumn Property="@(a => a.User_Id)" Sortable="true" />
+        <PropertyColumn Property="@(a => a.Action_Type)" Sortable="true" />
+        <PropertyColumn Property="@(a => a.Action_Timestamp)" Format="yyyy-MM-dd:hh-mm-ss" Sortable="true" />
+        <PropertyColumn Property="@(a => a.Details)" Sortable="true" />
+        <PropertyColumn Property="@(a => a.Table_Name)" Sortable="true" />
+        <PropertyColumn Property="@(a => a.Severity_Level)" Sortable="true" />
+    </QuickGrid>
 </div>
 
-<script>
-    // Заготовка для функции сортировки, сортировка по столбцу
-    function sortTable(columnIndex) {
-        var table, rows, switching, i, x, y, shouldSwitch;
-        table = document.getElementById("logTable");
-        switching = true;
-        while (switching) {
-            switching = false;
-            rows = table.rows;
-            for (i = 1; i < (rows.length - 1); i++) {
-                shouldSwitch = false;
-                x = rows[i].getElementsByTagName("TD")[columnIndex];
-                y = rows[i + 1].getElementsByTagName("TD")[columnIndex];
-                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                    shouldSwitch = true;
-                    break;
-                }
-            }
-            if (shouldSwitch) {
-                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                switching = true;
-            }
-        }
-    }
-</script>
 @code {
+    private AppDbContext context = default!;
 
+    private string logIdFilter = "";
+    private string userIdFilter = "";
+    private string actionTypeFilter = "";
+    private string actionTimestampFilter = "";
+    private string detailsFilter = "";
+    private string tableNameFilter = "";
+    private string severityLevelFilter = "";
+
+    PaginationState pagination = new PaginationState { ItemsPerPage = 20 };
+
+    private IQueryable<ActionLog> FilteredActionLogs =>
+        context.ActionLogs.Where(a => (a.Log_Id.ToString().Contains(logIdFilter) && !logIdFilter.Contains(" "))
+        || (logIdFilter.Contains(" ") && a.Log_Id.ToString().Equals(logIdFilter))).
+        Where(a => (a.User_Id.ToString().Contains(userIdFilter) && !userIdFilter.Contains(" "))
+        || (userIdFilter.Contains(" ") && a.User_Id.ToString().Equals(userIdFilter))).
+        Where(a => a.Action_Type!.Contains(actionTypeFilter)).
+        Where(a => a.Action_Timestamp.ToString()!.Contains(actionTimestampFilter)).
+        Where(a => a.Details!.Contains(detailsFilter)).
+        Where(a => a.Table_Name!.Contains(tableNameFilter)).
+        Where(a => a.Severity_Level.Contains(severityLevelFilter));
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
 }

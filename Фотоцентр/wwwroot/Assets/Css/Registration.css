@@ -11,26 +11,26 @@ body {
     height: 100vh;
 }
 
-.registration-form {
+.wrapper {
     background-color: white;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-    .registration-form h2 {
+    .wrapper h2 {
         margin-bottom: 20px;
         font-size: 24px;
         text-align: center;
     }
 
-    .registration-form label {
+    .wrapper label {
         display: block;
         margin-bottom: 5px;
         font-weight: bold;
     }
 
-    .registration-form input {
+    .wrapper input {
         width: 95%;
         padding: 8px;
         margin-bottom: 15px;
@@ -39,7 +39,7 @@ body {
         font-size: 16px;
     }
 
-    .registration-form button {
+    .wrapper button {
         width: 100%;
         padding: 10px;
         background-color: #28a745;
@@ -50,6 +50,6 @@ body {
         cursor: pointer;
     }
 
-        .registration-form button:hover {
+        .wrapper button:hover {
             background-color: #218838;
         }

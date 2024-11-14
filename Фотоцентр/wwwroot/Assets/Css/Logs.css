@@ -1,31 +1,41 @@
 ﻿.log-container {
-    max-width: 1000px;
+    max-width: 1400px;
     margin: 0 auto;
     background-color: white;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 600px;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
-th, td {
+th {
+    position: sticky;
+    top: 0;
+    background-color: #f2f2f2; 
+    z-index: 1; 
     padding: 10px;
     border: 1px solid #ddd;
     text-align: left;
 }
 
-th {
-    background-color: #f2f2f2;
-    cursor: pointer;
-}
-
     th:hover {
         background-color: #e0e0e0;
     }
+
+td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+    overflow: hidden;
+}
 
 tr:nth-child(even) {
     background-color: #f9f9f9;

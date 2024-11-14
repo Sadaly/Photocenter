@@ -9,8 +9,8 @@ namespace Фотоцентр.Components.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        readonly AppDBContext _dbContext = new();
-        public UserController(AppDBContext dbContext)
+        readonly AppDbContext _dbContext = new();
+        public UserController(AppDbContext dbContext)
         {
             _dbContext = dbContext;
         }
@@ -47,13 +47,13 @@ namespace Фотоцентр.Components.Controllers
             
         }
 
-        [HttpGet("{user_id}")]
-        public async Task<ActionResult<User?>> GetById(int user_id)
+        [HttpGet("{User_Id}")]
+        public async Task<ActionResult<User?>> GetById(int User_Id)
         {
-            return await _dbContext.Users.Where(x => x.User_Id == user_id).SingleOrDefaultAsync();
+            return await _dbContext.Users.Where(x => x.User_Id == User_Id).SingleOrDefaultAsync();
         }
 
-        [HttpDelete("{user_id}")]
+        [HttpDelete("{User_Id}")]
         public async Task<ActionResult> Delete(int id)
         {
             var userGetById = await GetById(id);
