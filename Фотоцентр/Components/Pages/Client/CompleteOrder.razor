@@ -14,81 +14,76 @@
     <link href="Assets\Css\CompleteOrder.css" rel="stylesheet" type="text/css" />
 </head>
 
-@if (complete_order != null)
-{
-    if (complete_order.Client_Id != This_User_Id)
-        navigationManager.NavigateTo("/", true);
-}
-else
-{
-    navigationManager.NavigateTo("/", true);
-}
-
-
 <div class="container">
-    <h2>Готовый заказ</h2>
-
-    <div class="order-details">
-        <img src="@image_path" alt="Фото заказа">
-        <a href="@complete_photo?.Photo_Url" target="_blank" class="photo-link">Ссылка на фото</a>
-    </div>
-
-    <div class="photographer-info">
-        <p><strong>Фотограф:</strong> Иван Петров</p>
-        <div class="photographer-comment">
-            <p><strong>Комментарий фотографа:</strong> Это был отличный день съемки, фотографии получились очень яркими и выразительными!</p>
-        </div>
-    </div>
-
-    @if (complete_order != null)
-        @if (context.Orders.FirstOrDefaultAsync(o => o.Order_Id == complete_order.Order_Id) != null)
+    @if (complete_order == null)
+    {
+        <p>Заказ не найден.</p>
+    }
+    else
+    {
+        @if (complete_order.Client_Id != This_User_Id)
         {
-            <div class="review-section">
-
-                <label for="review"><strong>Оставьте свой отзыв:</strong></label>
-                <textarea id="review" rows="5" placeholder="Введите ваш отзыв..." @bind="review_text"></textarea>
-
-                <!-- Рейтинг звездами -->
-                <div class="star-rating">
-                    <input type="radio" id="star5" name="rating" value="5" onclick="@rate = 5">
-                    <label for="star5" title="Отлично">★</label>
-                    <input type="radio" id="star4" name="rating" value="4" onclick="@rate = 4">
-                    <label for="star4" title="Хорошо">★</label>
-                    <input type="radio" id="star3" name="rating" value="3" onclick="@rate = 3">
-                    <label for="star3" title="Нормально">★</label>
-                    <input type="radio" id="star2" name="rating" value="2" onclick="@rate = 2">
-                    <label for="star2" title="Плохо">★</label>
-                    <input type="radio" id="star1" name="rating" value="1" onclick="@rate = 1">
-                    <label for="star1" title="Очень плохо">★</label>
-                </div>
-            </div>
-
-            <button class="submit-button">Отправить отзыв</button>
+            <p>Вы не можете просматривать этот заказ, так как он не принадлежит вам.</p>
+            navigationManager.NavigateTo("/", true);
         }
         else
         {
-            <div class="review-section">
+            <h2>Готовый заказ</h2>
 
-                <label><strong>Ваш отзыв:</strong></label>
-                <textarea id="review" rows="5" readonly>@complete_review?.Review_Text</textarea>
+            <div class="order-details">
+                @if (image_path != null)
+                {
+                    <img src="@image_path" alt="Фото заказа" class="order-image" />
+                }
 
-                <div class="star-rating">
-                    <input type="radio" id="star5" name="rating" value="5">
-                    <label for="star5" title="Отлично">★</label>
-                    <input type="radio" id="star4" name="rating" value="4">
-                    <label for="star4" title="Хорошо">★</label>
-                    <input type="radio" id="star3" name="rating" value="3">
-                    <label for="star3" title="Нормально">★</label>
-                    <input type="radio" id="star2" name="rating" value="2">
-                    <label for="star2" title="Плохо">★</label>
-                    <input type="radio" id="star1" name="rating" value="1">
-                    <label for="star1" title="Очень плохо">★</label>
-                </div>
+                @if (complete_photo?.Photo_Url != null)
+                {
+                    <a href="@complete_photo.Photo_Url" target="_blank" class="photo-link">Ссылка на фото</a>
+                }
             </div>
 
-            <button class="submit-button" @onsubmit="SaveReviewAsync">Отправить отзыв</button>
-        }
+            <div class="photographer-info">
+                <p><strong>Фотограф:</strong> @photographerName</p>
+            </div>
 
+            @if (complete_review == null)
+            {
+                <div class="review-section">
+                    <label for="review"><strong>Оставьте свой отзыв:</strong></label>
+                    <textarea id="review" rows="5" placeholder="Введите ваш отзыв..." @bind="review_text"></textarea>
+
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" @onclick="() => rate = 5">
+                        <label for="star5" title="Отлично">★</label>
+                        <input type="radio" id="star4" name="rating" value="4" @onclick="() => rate = 4">
+                        <label for="star4" title="Хорошо">★</label>
+                        <input type="radio" id="star3" name="rating" value="3" @onclick="() => rate = 3">
+                        <label for="star3" title="Нормально">★</label>
+                        <input type="radio" id="star2" name="rating" value="2" @onclick="() => rate = 2">
+                        <label for="star2" title="Плохо">★</label>
+                        <input type="radio" id="star1" name="rating" value="1" @onclick="() => rate = 1">
+                        <label for="star1" title="Очень плохо">★</label>
+                    </div>
+                </div>
+
+                <button class="submit-button" @onclick="SaveReviewAsync">Отправить отзыв</button>
+            }
+            else
+            {
+                <div class="review-section">
+                    <label><strong>Ваш отзыв:</strong></label>
+                    <textarea id="review" rows="5" readonly>@complete_review.Review_Text</textarea>
+
+                    <div class="star-rating">
+                        @for (int i = 0; i < complete_review.Rate; i++)
+                        {
+                            <label class="checked-star" for="star" title="Оценка">★</label>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    }
 </div>
 
 @code {
@@ -105,6 +100,7 @@ else
     Review? complete_review;
 
     string? image_path;
+    string photographerName = "Неизвестно";
 
     protected override void OnInitialized()
     {
@@ -112,11 +108,20 @@ else
         context = DbFactory.CreateDbContext();
 
         complete_order = context.Orders.FirstOrDefault(o => o.Order_Id == order_id);
-        complete_photo = context.Photos.FirstOrDefault(p => p.Is_Final == true && p.Order_Id == order_id);
-        complete_review = context.Reviews.FirstOrDefault(r => r.Order_Id == order_id);
 
-        if (complete_photo != null)
-            image_path = PhotoConverter.ConvertToBase64(complete_photo);
+        if (complete_order != null)
+        {
+            complete_photo = context.Photos.FirstOrDefault(p => p.Is_Final == true && p.Order_Id == order_id);
+
+            complete_review = context.Reviews.FirstOrDefault(r => r.Order_Id == order_id);
+
+            if (complete_photo != null)
+            {
+                image_path = PhotoConverter.ConvertToBase64(complete_photo);
+            }
+            var photographer = context.Users.FirstOrDefault(u => u.User_Id == complete_order.Photographer_Id);
+            photographerName = photographer?.Username ?? "Неизвестно";
+        }
     }
 
     public async Task SaveReviewAsync()
@@ -125,6 +130,7 @@ else
         {
             if (rate == 0)
                 rate = 5;
+
             var review = new Review
                 {
                     Client_Id = This_User_Id,
@@ -134,8 +140,24 @@ else
                     Review_Date = DateTime.Now,
                     Review_Text = review_text,
                 };
+
+            var photographer = context.Photographers.FirstOrDefault(photographer => photographer.User_Id == complete_order.Photographer_Id);
+            photographer.Rating = (photographer.Rating * photographer.Orders_Complete + rate) / (photographer.Rating + 1);
+            photographer.Orders_In_Progress--;
+            photographer.Orders_Complete++;
+
+            context.Photographers.Update(photographer);
             context.Reviews.Add(review);
+
+            await ActionLogger.LogActionAsync(This_User_Id,
+                    "Создание отзыва",
+                    $"Id: {review.Review_Id}",
+                    "Reviews",
+                    "info");
+
             await context.SaveChangesAsync();
+
         }
+        navigationManager.NavigateTo($"/complete-order/{order_id}", true);
     }
 }

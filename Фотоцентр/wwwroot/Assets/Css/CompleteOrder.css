@@ -85,11 +85,17 @@ h2 {
         transition: color 0.2s;
     }
 
+        /* Звезды, которые выбраны */
         .star-rating input:checked ~ label,
         .star-rating input:hover ~ label,
         .star-rating label:hover ~ label {
             color: #ffc107;
         }
+
+    /* Новый класс для выделенной звезды */
+    .star-rating .checked-star {
+        color: #ffc107; /* Золотой цвет для выделенной звезды */
+    }
 
 .submit-button {
     background-color: #28a745;

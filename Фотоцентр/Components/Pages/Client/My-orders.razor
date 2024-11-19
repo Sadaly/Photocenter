@@ -58,7 +58,7 @@
 
     private IQueryable<OrderDisplayModel> Orders =>
     context.Orders
-        .Where(o => o.Client_Id == This_User_Id) // Убедитесь, что данные принадлежат текущему пользователю
+        .Where(o => o.Client_Id == This_User_Id)
         .Select(o => new OrderDisplayModel
             {
                 Order_Id = o.Order_Id,
@@ -76,12 +76,9 @@
 
     protected override void OnInitialized()
     {
-        // Получаем идентификатор текущего пользователя
         This_User_Id = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
         context = DbFactory.CreateDbContext();
     }
-
-    // Модель для отображения данных о заказе с подгруженными именами фотографа и сервиса
     public class OrderDisplayModel
     {
         public int Order_Id { get; set; }

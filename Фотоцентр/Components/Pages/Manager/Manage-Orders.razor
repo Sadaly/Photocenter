@@ -1,6 +1,7 @@
 ﻿@page "/manage-orders"
 @rendermode RenderMode.InteractiveServer
 @inject IDbContextFactory<AppDbContext> DbFactory
+@inject IHttpContextAccessor HttpContextAccessor
 @inject IActionLogger ActionLogger
 @attribute [Authorize(Roles = "manager")]
 
@@ -11,57 +12,120 @@
 </head>
 
 <div class="orders-container">
-    <!-- Поле для поиска или фильтрации -->
-    <div class="search-container">
-        <input type="text" id="searchByUser" placeholder="Поиск по имени пользователя">
+
+    <Paginator State="pagination" />
+
+    <QuickGrid TItem="OrderViewModel" Items="Orders" Pagination="pagination">
+        <PropertyColumn Title="ID заказа" Property="@(o => o.Order_Id)" Sortable="true"></PropertyColumn>
+        <PropertyColumn Title="Имя фотографа" Property="@(o => o.Username)" Sortable="true"></PropertyColumn>
+        <PropertyColumn Title="Цена" Property="@(o => o.Total_Amount)" Sortable="true"></PropertyColumn>
+        <PropertyColumn Title="Тип услуги" Property="@(o => o.Service_Name)" Sortable="true"></PropertyColumn>
+        <PropertyColumn Title="Описание" Property="@(o => o.Description)" Sortable="true"></PropertyColumn>
+        <PropertyColumn Title="Дата заказа" Property="@(o => o.Order_Date)" Format="yyyy-MM-dd" Sortable="true"></PropertyColumn>
+    </QuickGrid>
+
+
+    <div class="assign-container">
+        <label for="orderSelector">Выберите заказ:</label>
+        <select id="orderSelector" @bind="selectedOrderId">
+            <option value="-1">Выберите заказ</option>
+            @foreach (var order in ordersWithNoPhotographer)
+            {
+                <option value="@order.Order_Id">Заказ ID: @order.Order_Id</option>
+            }
+        </select>
+
+        <label for="photographerSelector">Выберите фотографа:</label>
+        <select id="photographerSelector" @bind="selectedPhotographerId">
+            <option value="-1">Выберите фотографа</option>
+            @foreach (var photographer in photographers)
+            {
+                <option value="@photographer.User_Id">@photographer.Username</option>
+            }
+        </select>
+
+        <button class="assign-btn" @onclick="AssignPhotographer">Назначить фотографа</button>
     </div>
 
-    <!-- Таблица заказов -->
-    <table id="ordersTable">
-        <thead>
-            <tr>
-                <th>Имя пользователя</th>
-                <th>Цена</th>
-                <th>Тип услуги</th>
-                <th>Описание</th>
-                <th>Изображение</th>
-                <th>Дата заказа</th>
-                <th>Действие</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Иван Иванов</td>
-                <td>1500 руб.</td>
-                <td>Фотосессия</td>
-                <td>Семейная фотосессия в парке</td>
-                <td><a href="#">Ссылка на изображение</a></td>
-                <td>2024-10-20</td>
-                <td><button class="assign-btn">Назначить фотографа</button></td>
-            </tr>
-            <tr>
-                <td>Анна Петрова</td>
-                <td>3000 руб.</td>
-                <td>Свадебная съемка</td>
-                <td>Фотосъемка на свадьбе</td>
-                <td><a href="#">Ссылка на изображение</a></td>
-                <td>2024-10-21</td>
-                <td><button class="assign-btn">Назначить фотографа</button></td>
-            </tr>
-            <tr>
-                <td>Сергей Сергеев</td>
-                <td>2000 руб.</td>
-                <td>Портретная съемка</td>
-                <td>Портреты на улице</td>
-                <td><a href="#">Ссылка на изображение</a></td>
-                <td>2024-10-22</td>
-                <td><button class="assign-btn">Назначить фотографа</button></td>
-            </tr>
-            <!-- Добавьте больше строк заказов при необходимости -->
-        </tbody>
-    </table>
 </div>
 
 @code {
+    private int This_User_Id;
+    private AppDbContext context = default!;
+    private List<Photographer> photographers = new List<Photographer>();
+    private List<OrderViewModel> ordersWithNoPhotographer = new List<OrderViewModel>(); 
+    private int selectedOrderId = -1; 
+    private int selectedPhotographerId = -1; 
 
+    private IQueryable<OrderViewModel> Orders => context.Orders
+        .Where(o => o.Photographer_Id == -1) 
+        .Select(o => new OrderViewModel
+            {
+                Order_Id = o.Order_Id,
+                Username = o.Photographer_Id != -1
+                    ? context.Photographers.FirstOrDefault(p => p.User_Id == o.Photographer_Id).Username
+                    : "Не назначен",
+                Service_Name = context.Services.FirstOrDefault(s => s.Service_Id == o.Service_Id).Service_Name,
+                Description = o.Description,
+                Order_Date = o.Order_Date,
+                Total_Amount = o.Total_Amount,
+                StatusId = o.Status_Id,
+                Photographer_Id = o.Photographer_Id
+            });
+
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+    protected override void OnInitialized()
+    {
+        This_User_Id = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+        context = DbFactory.CreateDbContext();
+        photographers = context.Photographers.Where(p => p.Is_Role_Match == true).ToList();
+
+        ordersWithNoPhotographer = context.Orders
+            .Where(o => o.Photographer_Id == -1)
+            .Select(o => new OrderViewModel
+                {
+                    Order_Id = o.Order_Id,
+                    Username = "Не назначен",
+                    Service_Name = context.Services.FirstOrDefault(s => s.Service_Id == o.Service_Id).Service_Name,
+                    Description = o.Description,
+                    Order_Date = o.Order_Date,
+                    Total_Amount = o.Total_Amount,
+                    StatusId = o.Status_Id,
+                    Photographer_Id = o.Photographer_Id
+                })
+            .ToList();
+    }
+
+    private async Task AssignPhotographer()
+    {
+        if (selectedOrderId == -1 || selectedPhotographerId == -1)
+        {
+            Console.WriteLine("Ошибка: необходимо выбрать заказ и фотографа.");
+            return;
+        }
+
+        var order = context.Orders.FirstOrDefault(o => o.Order_Id == selectedOrderId);
+        if (order != null)
+        {
+            order.Photographer_Id = selectedPhotographerId;
+            order.Status_Id++;
+
+            var photographer = context.Photographers.FirstOrDefault(photographer => photographer.User_Id == selectedPhotographerId);
+            photographer.Orders_In_Progress++;
+
+            context.Photographers.Update(photographer);
+            context.Update(order);
+            context.SaveChanges();
+
+            ActionLogger.LogActionAsync(
+                This_User_Id,
+                "Назначение фотографа",
+                $"Для заказа {selectedOrderId} был назначен фотограф: {context.Photographers.FirstOrDefault(p => p.User_Id == selectedPhotographerId)?.Username}.",
+                "Orders",
+                "info"
+            );
+
+        }
+    }
 }

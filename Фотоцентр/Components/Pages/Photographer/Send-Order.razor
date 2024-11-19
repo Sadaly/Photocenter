@@ -1,31 +1,106 @@
-﻿@page "/send-order"
+﻿@page "/send-order/{orderId:int}" 
 @attribute [Authorize(Roles = "photographer")]
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@rendermode RenderMode.InteractiveServer
+@inject IActionLogger ActionLogger
 
 <PageTitle>Фотоцентр | Отправка изображения</PageTitle>
+
 <head>
-    <link href="/Assets/Css/SendOrder.css" rel="stylesheet" type="text/css"/>
+    <link href="/Assets/Css/SendOrder.css" rel="stylesheet" type="text/css" />
 </head>
 
 <div class="content">
-    <form action="/submit" method="post" enctype="multipart/form-data">
+    <h3>Отправка изображения для заказа @OrderId</h3>
+
+    <form @onsubmit="HandleSubmit" enctype="multipart/form-data">
         <div>
             <label for="imageFile">Загрузить изображение:</label>
-            <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+            <InputFile OnChange="@HandleFileSelected" type="file" id="imageFile" name="imageFile" accept="image/*" required />
         </div>
-    
+
         <div>
             <label for="imageUrl">Или введите ссылку на изображение:</label>
-            <input type="url" id="imageUrl" name="imageUrl" placeholder="http://example.com/image.jpg">
+            <input @bind="photoLink" type="url" id="imageUrl" name="imageUrl" placeholder="http://example.com/image.jpg" />
         </div>
-    
-        <div>
-            <label for="comment">Комментарий:</label>
-            <textarea id="comment" name="comment" rows="4" placeholder="Введите ваш комментарий"></textarea>
-        </div>
-    
+
         <button type="submit">Отправить</button>
     </form>
 </div>
-@code {
 
+@code {
+    [Parameter] public int OrderId { get; set; }
+    private AppDbContext context = default!;
+    private Order? order;
+    private IBrowserFile? selectedFile;
+    private string? photoLink;
+    private byte[]? imageBytes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        order = await context.Orders.FirstOrDefaultAsync(o => o.Order_Id == OrderId);
+
+        if (order == null)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        var currentUserId = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+        if (order.Photographer_Id != currentUserId || order.Status_Id != 2)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+
+        using (var stream = selectedFile.OpenReadStream())
+        {
+            var buffer = new byte[selectedFile.Size];
+            await stream.ReadAsync(buffer.AsMemory(0, (int)selectedFile.Size));
+            imageBytes = buffer; 
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            if (order == null) return;
+
+            string imageUrl = photoLink;
+
+            using var context = DbFactory.CreateDbContext();
+
+            order.Status_Id = 3;
+            await context.SaveChangesAsync();
+
+            var photo = new Photo
+            {
+                Order_Id = order.Order_Id,
+                Image = imageBytes,
+                Content_Type = selectedFile?.ContentType,
+                Is_Final = true,
+                Photo_Url = imageUrl
+            };
+            context.Photos.Add(photo);
+            context.Orders.Update(order);
+            await context.SaveChangesAsync();
+
+            Navigation.NavigateTo($"/");
+
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Ошибка при обработке: {ex.Message}");
+        }
+    }
 }

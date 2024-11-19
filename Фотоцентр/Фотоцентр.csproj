@@ -15,8 +15,6 @@
     <Content Remove="wwwroot\Assets\Css\MyOrders.css" />
     <Content Remove="wwwroot\Assets\Css\NavMenu.css" />
     <Content Remove="wwwroot\Assets\Css\NewOrder.css" />
-    <Content Remove="wwwroot\Assets\Css\NotCompleteOrder.css" />
-    <Content Remove="wwwroot\Assets\Css\Orders.css" />
     <Content Remove="wwwroot\Assets\Css\Payment.css" />
     <Content Remove="wwwroot\Assets\Css\Registration.css" />
     <Content Remove="wwwroot\Assets\Css\Reviews.css" />
@@ -25,7 +23,6 @@
 
   <ItemGroup>
     <None Include="wwwroot\Assets\Css\Services.css" />
-    <None Include="wwwroot\Assets\Css\NotCompleteOrder.css" />
     <None Include="wwwroot\Assets\Css\CompleteOrder.css" />
     <None Include="wwwroot\Assets\Css\Reviews.css" />
     <None Include="wwwroot\Assets\Css\Payment.css" />
@@ -33,7 +30,6 @@
     <None Include="wwwroot\Assets\Css\ManageOrders.css" />
     <None Include="wwwroot\Assets\Css\AcceptedOrders.css" />
     <None Include="wwwroot\Assets\Css\Logs.css" />
-    <None Include="wwwroot\Assets\Css\Orders.css" />
     <None Include="wwwroot\Assets\Css\Registration.css" />
     <None Include="wwwroot\Assets\Css\NavMenu.css" />
     <None Include="wwwroot\Assets\Css\MyOrders.css" />

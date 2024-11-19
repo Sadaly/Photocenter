@@ -59,12 +59,10 @@
 
         if (order == null || order.Status_Id > 0)
         {
-            // Если заказ не найден или уже оплачен, перенаправляем на главную страницу
             NavigationManager.NavigateTo("/");
             return;
         }
 
-        // Устанавливаем итоговую сумму (например, из информации о заказе)
         totalAmount = order.Total_Amount;
     }
 
@@ -73,17 +71,14 @@
         if (string.IsNullOrWhiteSpace(cardholder) || string.IsNullOrWhiteSpace(cardnumber) ||
             string.IsNullOrWhiteSpace(expiry) || string.IsNullOrWhiteSpace(cvv))
         {
-            // Если не все поля заполнены, возвращаем ошибку
             return;
         }
 
         using var context = DbFactory.CreateDbContext();
 
-        // Обновляем статус заказа на "оплачен"
-        order.Status_Id = 1; // Статус 1 — "оплачен"
+        order.Status_Id = 1; 
         context.Orders.Update(order);
 
-        // Создаем новый платеж
         var payment = new Models.Payment
             {
                 Order_Id = order.Order_Id,
@@ -93,22 +88,17 @@
 
         context.Payments.Add(payment);
 
-        // Логируем действие
         var userId = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
         await ActionLogger.LogActionAsync(userId,
             "Создание платежа",
             $"Платеж за заказ {order.Order_Id} на сумму {totalAmount} ₽",
             "Payments",
             "info");
-
-        // Сохраняем изменения
         await context.SaveChangesAsync();
 
-        // Перенаправляем на страницу с подтверждением или успехом
         NavigationManager.NavigateTo($"/");
     }
 
-    // Метод отмены заказа
     private async Task CancelOrder()
     {
         var userId = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -120,7 +110,6 @@
 
         using var context = DbFactory.CreateDbContext();
 
-        // Удаляем все фото, связанные с заказом
         var photos = await context.Photos.Where(p => p.Order_Id == order.Order_Id).ToListAsync();
 
         if (photos.Any())
@@ -134,20 +123,16 @@
             await context.SaveChangesAsync();
         }
 
-        // Удаляем сам заказ
         context.Orders.Remove(order);
 
-        // Логируем удаление заказа
         await ActionLogger.LogActionAsync(userId,
             "Удаление заказа",
             $"Заказ с ID {order.Order_Id} был удален.",
             "Orders",
             "info");
 
-        // Сохраняем изменения
         await context.SaveChangesAsync();
 
-        // Перенаправляем на главную страницу
         NavigationManager.NavigateTo("/");
     }
 }

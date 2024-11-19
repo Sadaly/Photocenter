@@ -33,6 +33,10 @@
                     <option value="@service.Service_Id">@service.Service_Name</option>
                 }
             </InputSelect>
+            
+            <p>Описание: @services.FirstOrDefault(s => s.Service_Id == newOrder.Service_Id)?.Description</p>
+
+            <p>Стоимость: @services.FirstOrDefault(s => s.Service_Id == newOrder.Service_Id)?.Price</p>
         </div>
 
         <div class="form-group">
@@ -63,7 +67,7 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        services = await context.Services.ToListAsync(); // Загрузка списка услуг из базы данных
+        services = await context.Services.ToListAsync(); 
     }
 
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
@@ -74,8 +78,8 @@
         using (var stream = selectedFile.OpenReadStream())
         {
             var buffer = new byte[selectedFile.Size];
-            await stream.ReadAsync(buffer.AsMemory(0, (int)selectedFile.Size)); // Асинхронно читаем
-            imageBytes = buffer;  // Сохраняем байты изображения
+            await stream.ReadAsync(buffer.AsMemory(0, (int)selectedFile.Size)); 
+            imageBytes = buffer;  
         }
     }
 
@@ -86,12 +90,12 @@
             var userId = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
             using var context = DbFactory.CreateDbContext();
 
-            // Добавляем новый заказ
             newOrder.Order_Date = DateTime.Now;
             newOrder.Status_Id = 0;
             newOrder.Total_Amount = services.FirstOrDefault(s => s.Service_Id == newOrder.Service_Id)?.Price ?? 0;
             newOrder.Client_Id = userId;
             newOrder.Photographer_Id = -1;
+            newOrder.Description = description;
             context.Orders.Add(newOrder);
             await context.SaveChangesAsync();
 
@@ -100,16 +104,14 @@
                     Order_Id = newOrder.Order_Id,
                     Image = imageBytes,
                     Content_Type = selectedFile?.ContentType,
-                    Is_Final = false, // Пока что ставим Is_Final в false
+                    Is_Final = false,
                     Photo_Url = photoLink
                 };
 
-            // Сохраняем фото в таблице Photo
             context.Photos.Add(photo);
-            await context.SaveChangesAsync();  // Применяем изменения
+            await context.SaveChangesAsync(); 
 
-
-            // Логирование действия с заказом
+            
             await ActionLogger.LogActionAsync(userId,
                 "Создание нового заказа",
                 $"Создан новый заказ: ID {newOrder.Order_Id}, Услуга: {services.FirstOrDefault(s => s.Service_Id == newOrder.Service_Id)?.Service_Name}, Сумма: {newOrder.Total_Amount}",
@@ -118,12 +120,10 @@
 
             statusMessage = $"Заказ успешно создан! Выбранная услуга: {services.FirstOrDefault(s => s.Service_Id == newOrder.Service_Id)?.Service_Name}";
 
-            // Перенаправляем на страницу оплаты
             NavigationManager.NavigateTo($"/payment/{newOrder.Order_Id}");
         }
         catch (Exception ex)
         {
-            // Логируем ошибку
             var userId = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
             await ActionLogger.LogActionAsync(userId,
                 "Ошибка при создании нового заказа",
@@ -131,7 +131,6 @@
                 "Orders",
                 "error");
 
-            // Можно установить статус ошибки, который будет отображен пользователю
             statusMessage = $"Ошибка при создании заказа: {ex.Message}";
         }
     }

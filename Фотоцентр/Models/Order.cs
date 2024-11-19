@@ -12,5 +12,6 @@ namespace Фотоцентр.Models
 		public int Status_Id { get; set; }
 		public DateTime Order_Date { get; set; }
 		public decimal Total_Amount{ get; set; }
+        public string? Description { get; set; }
 	}
 }

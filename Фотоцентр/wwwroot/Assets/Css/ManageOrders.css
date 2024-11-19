@@ -1,64 +1,116 @@
-﻿h2 {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
+﻿/* Общий стиль для контейнера заказов */
 .orders-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    background-color: white;
     padding: 20px;
-    border-radius: 10px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* Стили для QuickGrid (так как он использует table) */
 table {
     width: 100%;
     border-collapse: collapse;
+    margin-bottom: 20px;
+    background-color: white;
 }
 
-th, td {
-    padding: 10px;
-    border: 1px solid #ddd;
-    text-align: left;
-}
-
+/* Стили для заголовков таблицы */
 th {
-    background-color: #f2f2f2;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    text-align: left;
+    font-weight: bold;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
 }
 
-tr:nth-child(even) {
-    background-color: #f9f9f9;
+/* Стили для ячеек таблицы */
+td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
 }
 
+/* Стиль для выделения строк при наведении */
 tr:hover {
     background-color: #f1f1f1;
 }
 
-.search-container {
-    margin-bottom: 20px;
+/* Стили для пагинации */
+.paginator {
+    margin-top: 20px;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 10px;
 }
 
-    .search-container input {
+    .paginator button {
+        padding: 8px 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+        .paginator button:hover {
+            background-color: #45a049;
+        }
+
+        .paginator button:disabled {
+            background-color: #ddd;
+            cursor: not-allowed;
+        }
+
+/* Стили для формы назначения фотографа */
+.assign-container {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+    /* Стили для полей ввода и селектов */
+    .assign-container label {
+        font-size: 14px;
+        margin-right: 10px;
+    }
+
+    .assign-container input,
+    .assign-container select {
         padding: 8px;
-        width: 100%;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 16px;
+        font-size: 14px;
+        margin: 5px 0 10px 0;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        width: 200px;
     }
 
-.assign-btn {
-    padding: 8px 12px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-}
+        .assign-container input:focus,
+        .assign-container select:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
 
-    .assign-btn:hover {
-        background-color: #218838;
+    /* Стили для кнопки назначения */
+    .assign-container .assign-btn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
     }
+
+        .assign-container .assign-btn:hover {
+            background-color: #45a049;
+        }
+
+        .assign-container .assign-btn:disabled {
+            background-color: #ddd;
+            cursor: not-allowed;
+        }

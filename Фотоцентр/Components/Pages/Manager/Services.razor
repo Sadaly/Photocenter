@@ -1,6 +1,7 @@
 ﻿@page "/services"
 @rendermode RenderMode.InteractiveServer
 @inject IDbContextFactory<AppDbContext> DbFactory
+@inject IHttpContextAccessor HttpContextAccessor
 @inject IActionLogger ActionLogger
 @attribute [Authorize(Roles = "manager")]
 
@@ -22,32 +23,68 @@
         <PropertyColumn Title="Цена" Property="@(s => s.Price)" Sortable="true" />
         <PropertyColumn Title="Описание" Property="@(s => s.Description)" Sortable="true" />
         <TemplateColumn Title="Действия">
+            <!-- Кнопка Удалить -->
             <button @onclick="@(async () => await DeleteService(context.Service_Id))" class="btn btn-danger">Удалить</button>
+            
+            <!-- Кнопка Изменить -->
+            <button @onclick="@(async () => await EditService(context.Service_Id))" class="btn btn-warning">Изменить</button>
         </TemplateColumn>
     </QuickGrid>
 
-    <h3>Добавить новый сервис</h3>
-    <EditForm Model="@newService" OnValidSubmit="HandleValidSubmit" autocomplete="off">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+    
 
-        <div class="form-group">
-            <label for="serviceName">Название сервиса:</label>
-            <InputText id="serviceName" class="form-control" @bind-Value="newService.Service_Name" required />
-        </div>
+    <!-- Форма редактирования существующего сервиса -->
+    @if (serviceToEdit.Service_Id > 0)
+    {
+        <h3>Редактировать сервис</h3>
+        <EditForm Model="@serviceToEdit" OnValidSubmit="HandleEditSubmit" autocomplete="off">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-        <div class="form-group">
-            <label for="price">Цена:</label>
-            <InputNumber id="price" class="form-control" @bind-Value="newService.Price" required />
-        </div>
+            <div class="form-group">
+                <label for="editServiceName">Название сервиса:</label>
+                <InputText id="editServiceName" class="form-control" @bind-Value="serviceToEdit.Service_Name" required />
+            </div>
 
-        <div class="form-group">
-            <label for="description">Описание:</label>
-            <InputTextArea id="description" class="form-control" @bind-Value="newService.Description" />
-        </div>
+            <div class="form-group">
+                <label for="editPrice">Цена:</label>
+                <InputNumber id="editPrice" class="form-control" @bind-Value="serviceToEdit.Price" required />
+            </div>
 
-        <button type="submit" class="btn btn-primary">Добавить сервис</button>
-    </EditForm>
+            <div class="form-group">
+                <label for="editDescription">Описание:</label>
+                <InputTextArea id="editDescription" class="form-control" @bind-Value="serviceToEdit.Description" />
+            </div>
+
+            <button type="submit" class="btn btn-success">Сохранить изменения</button>
+            <button @onclick="CancelEdit" class="btn btn-secondary">Отменить</button>
+        </EditForm>
+    }
+    else
+    {
+        <h3>Добавить новый сервис</h3>
+        <EditForm Model="@newService" OnValidSubmit="HandleValidSubmit" autocomplete="off">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="serviceName">Название сервиса:</label>
+                <InputText id="serviceName" class="form-control" @bind-Value="newService.Service_Name" required />
+            </div>
+
+            <div class="form-group">
+                <label for="price">Цена:</label>
+                <InputNumber id="price" class="form-control" @bind-Value="newService.Price" required />
+            </div>
+
+            <div class="form-group">
+                <label for="description">Описание:</label>
+                <InputTextArea id="description" class="form-control" @bind-Value="newService.Description" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Добавить сервис</button>
+        </EditForm>
+    }
 
     @if (!string.IsNullOrEmpty(statusMessage))
     {
@@ -58,8 +95,8 @@
 </div>
 
 @code {
+    private int This_User_Id;
     private AppDbContext context = default!;
-
     private string serviceNameFilter = "";
     private string servicePriceFilter = "";
 
@@ -67,6 +104,10 @@
 
     private Service newService = new Service();
     private string statusMessage = "";
+    private Service serviceToEdit = new Service(); 
+    private string? old_Name;
+    private decimal? old_price;
+    private string? old_description;
 
     private IQueryable<Service> FilteredServices =>
         context.Services
@@ -76,6 +117,7 @@
     protected override void OnInitialized()
     {
         context = DbFactory.CreateDbContext();
+        This_User_Id = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
     }
 
     private async Task HandleValidSubmit()
@@ -84,18 +126,12 @@
         {
             using (var dbContext = DbFactory.CreateDbContext())
             {
-                // Добавление нового сервиса в базу данных
                 dbContext.Services.Add(newService);
-                // Обновление списка сервисов
                 statusMessage = $"Сервис '{newService.Service_Name}' успешно добавлен!";
-                newService = new Service(); // Очищаем форму
+                newService = new Service(); 
 
-                // Логирование действия
-                await ActionLogger.LogActionAsync(1, // ID пользователя (например, админ)
-                    "Добавление сервиса",
-                    $"Новый сервис: {newService.Service_Name}, Цена: {newService.Price}, Описание: {newService.Description}",
-                    "Services",
-                    "info");
+
+                await ActionLogger.LogActionAsync(This_User_Id, "Добавление сервиса", $"Новый сервис: {newService.Service_Name}, Цена: {newService.Price}, Описание: {newService.Description}", "Services", "info");
                 await dbContext.SaveChangesAsync();
             }
         }
@@ -112,27 +148,63 @@
             using (var dbContext = DbFactory.CreateDbContext())
             {
                 var serviceToDelete = dbContext.Services.FirstOrDefault(s => s.Service_Id == serviceId);
-
                 if (serviceToDelete != null)
                 {
                     dbContext.Services.Remove(serviceToDelete);
-
-                    // Логирование действия
-                    await ActionLogger.LogActionAsync(1, // ID пользователя (например, админ)
-                        "Удаление сервиса",
-                        $"Сервис удален: {serviceToDelete.Service_Name}, ID: {serviceToDelete.Service_Id}",
-                        "Services",
-                        "info");
-
+                    await ActionLogger.LogActionAsync(This_User_Id, "Удаление сервиса", $"Сервис удален: {serviceToDelete.Service_Name}, ID: {serviceToDelete.Service_Id}", "Services", "info");
                     await dbContext.SaveChangesAsync();
+                    statusMessage = $"Сервис '{serviceToDelete.Service_Name}' успешно удален!";
                 }
-
-                statusMessage = $"Сервис '{serviceToDelete?.Service_Name}' успешно удален!";
             }
         }
         catch (Exception ex)
         {
             statusMessage = $"Ошибка при удалении сервиса: {ex.Message}";
         }
+    }
+
+    private async Task EditService(int serviceId)
+    {
+        try
+        {
+            var service = await context.Services.FindAsync(serviceId);
+            if (service != null)
+            {
+                serviceToEdit = service;
+                old_price = service.Price;
+                old_description = service.Description;
+                old_Name = service.Service_Name;
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Ошибка при редактировании сервиса: {ex.Message}";
+        }
+    }
+
+    private async Task HandleEditSubmit()
+    {
+        try
+        {
+            using (var dbContext = DbFactory.CreateDbContext())
+            {
+                dbContext.Services.Update(serviceToEdit);
+                dbContext.SaveChanges();
+                statusMessage = $"Сервис '{serviceToEdit.Service_Name}' успешно обновлен!";
+                serviceToEdit = new Service(); 
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Ошибка при обновлении сервиса: {ex.Message}";
+        }
+    }
+
+    private void CancelEdit()
+    {
+        serviceToEdit.Price = old_price;
+        serviceToEdit.Service_Name = old_Name;
+        serviceToEdit.Description = old_description;
+        serviceToEdit = new Service();
     }
 }

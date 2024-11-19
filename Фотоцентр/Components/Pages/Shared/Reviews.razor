@@ -28,8 +28,8 @@
         <div class="review-item">
             <div class="review-header">
             <p class="client-info">
-                @{user = context.Users.FirstOrDefault(u => u.User_Id == review.Client_Id);}
-                Клиент: @user?.Username (ID: @user?.User_Id)</p>
+                    Клиент: (ID: @review.Client_Id)
+                </p>
             <p class="review-date">Дата: @review.Review_Date.ToString()</p>
         </div>
         <div class="review-rating">
@@ -77,22 +77,30 @@
 
     private async Task DeleteReview(int review_id)
     {
+        using var context = DbFactory.CreateDbContext();
         var review = await context.Reviews.FirstOrDefaultAsync(r => r.Review_Id == review_id);
         if (review != null)
         {
+            var photographer = context.Photographers.FirstOrDefault(photographer => photographer.User_Id == review.Photographer_Id);
+            photographer.Rating = (photographer.Rating * (photographer.Orders_Complete - 1) - review.Rate + 5.0m) / (photographer.Rating);
+            
+            context.Photographers.Update(photographer);
+
             context.Reviews.Remove(review);
-            await context.SaveChangesAsync();
             
 
-            await ActionLogger.LogActionAsync(This_User_Id,
+            ActionLogger.LogActionAsync(This_User_Id,
                     "Удаление отзыва",
                     $"Отзыв: {review.Review_Id}",
                     "Reviews",
                     "info");
+
+
+            context.SaveChanges();
         }
         else
         {
-            await ActionLogger.LogActionAsync(This_User_Id,
+            ActionLogger.LogActionAsync(This_User_Id,
                     "Удаление отзыва",
                     $"Отзыв: {review?.Review_Id} не найден",
                     "Reviews",

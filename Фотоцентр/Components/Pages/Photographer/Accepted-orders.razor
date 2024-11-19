@@ -1,56 +1,121 @@
-﻿@using Microsoft.AspNetCore.Authorization
+﻿@page "/orders-history"
 @attribute [Authorize(Roles = "photographer")]
-@page "/orders-history"
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@rendermode RenderMode.InteractiveServer
+@inject IActionLogger ActionLogger
 
 <PageTitle>Фотоцентр | Принятые заказы</PageTitle>
 
-<head runat="server">
-    <link href="Assets\Css\AcceptedOrders.css" rel="stylesheet" type="text/css" />
+<head>
+    <link href="Assets/Css/AcceptedOrders.css" rel="stylesheet" type="text/css" />
 </head>
 
 <div class="accepted-orders-container">
-    <!-- Поле для поиска или фильтрации -->
-    <div class="search-container">
-        <input type="text" id="searchByUser" placeholder="Поиск по имени пользователя">
-    </div>
+    <!-- QuickGrid для отображения заказов -->
+    <QuickGrid TItem="OrderViewModel" Items="FilteredOrders" Pagination="pagination">
+        <PropertyColumn Title="Order ID" Property="@(o => o.Order_Id)" Sortable="true" />
+        <PropertyColumn Title="Service Name" Property="@(o => o.Service_Name)" Sortable="true" />
+        <PropertyColumn Title="Цена" Property="@(o => o.Total_Amount)" Sortable="true" />
+        <PropertyColumn Title="Описание" Property="@(o => o.Description)" Sortable="true" />
+        <PropertyColumn Title="Дата заказа" Property="@(o => o.Order_Date)" Sortable="true" />
+        <TemplateColumn Title="Действие">
+            <button @onclick="@(() => GoToSendOrderPage(context.Order_Id))" class="send-btn">Отправить</button>
+            <button @onclick="@(() => ViewPhotos((OrderViewModel)context))" class="view-btn">Посмотреть</button>
+        </TemplateColumn>
+    </QuickGrid>
 
-    <!-- Таблица принятых заказов -->
-    <table id="acceptedOrdersTable">
-        <thead>
-            <tr>
-                <th>Имя пользователя</th>
-                <th>Цена</th>
-                <th>Тип услуги</th>
-                <th>Описание</th>
-                <th>Изображение</th>
-                <th>Дата принятия</th>
-                <th>Действие</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Иван Иванов</td>
-                <td>1500 руб.</td>
-                <td>Дизайн логотипа</td>
-                <td>Создание логотипа для новой компании</td>
-                <td><a href="#">Ссылка на изображение</a></td>
-                <td>2024-10-20</td>
-                <td><button class="send-btn">Отправить</button></td>
-            </tr>
-            <tr>
-                <td>Анна Петрова</td>
-                <td>3000 руб.</td>
-                <td>Создание веб-сайта</td>
-                <td>Разработка сайта-визитки</td>
-                <td><a href="#">Ссылка на изображение</a></td>
-                <td>2024-10-21</td>
-                <td><button class="send-btn">Отправить</button></td>
-            </tr>
-            <!-- Добавьте больше строк заказов при необходимости -->
-        </tbody>
-    </table>
+    @if (selectedOrder != null)
+    {
+        <div class="photo-viewer">
+            <h3>Просмотр отправленных фото для заказа @selectedOrder.Order_Id</h3>
+
+            @foreach (var photo in selectedOrderPhotos)
+            {
+                <div class="photo-item">
+                    <img src="@photoBase64" alt="Фото" class="photo-image" />
+
+                    @if (!string.IsNullOrEmpty(photo.Photo_Url))
+                    {
+                        <div>
+                            <a href="@photo.Photo_Url" target="_blank">Смотреть фото в оригинале</a>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+
 </div>
 
 @code {
+    private AppDbContext context = default!;
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+    private Order? selectedOrder = null;
+    private List<Photo> selectedOrderPhotos = new List<Photo>(); 
+    private string photoBase64 = string.Empty;
 
+    private IQueryable<OrderViewModel> FilteredOrders =>
+        context.Orders
+            .Where(o => o.Status_Id == 2)
+            .Where(o => o.Photographer_Id == GetCurrentPhotographerId())
+            .Join(context.Services,
+                  order => order.Service_Id,
+                  service => service.Service_Id,
+                  (order, service) => new OrderViewModel
+                      {
+                          Order_Id = order.Order_Id,
+                          Service_Name = service.Service_Name,
+                          Total_Amount = order.Total_Amount,
+                          Description = order.Description,
+                          Order_Date = order.Order_Date
+                      })
+            .AsQueryable();
+
+    public class OrderViewModel
+    {
+        public int Order_Id { get; set; }
+        public string Service_Name { get; set; }
+        public decimal Total_Amount { get; set; }
+        public string Description { get; set; }
+        public DateTime Order_Date { get; set; }
+    }
+
+    private int GetCurrentPhotographerId()
+    {
+        return Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+    }
+
+    private void GoToSendOrderPage(int order_id)
+    {
+        Navigation.NavigateTo($"/send-order/{order_id}");
+    }
+
+    private async Task ViewPhotos(OrderViewModel order)
+    {
+        using var context = DbFactory.CreateDbContext();
+
+        selectedOrder = context.Orders
+            .FirstOrDefault(o => o.Order_Id == order.Order_Id);
+
+        if (selectedOrder != null)
+        {
+            selectedOrderPhotos = context.Photos
+                .Where(p => p.Order_Id == order.Order_Id)
+                .ToList();
+
+            if (selectedOrderPhotos.Any())
+            {
+                var firstPhoto = selectedOrderPhotos.First();
+                photoBase64 = PhotoConverter.ConvertToBase64(firstPhoto);
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        context = DbFactory.CreateDbContext();
+        await base.OnInitializedAsync();
+    }
 }
