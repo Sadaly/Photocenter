@@ -79,37 +79,98 @@
         var user = context.Users.FirstOrDefault(u => u.User_Id == userId);
         if (user != null)
         {
+            var This_User_Id = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
             var oldRole = user.Role;
             user.Role = e.Value?.ToString() ?? "client";
 
-            if (e.Value?.ToString() == "photographer")
-            {
-                if (context.Photographers.FirstOrDefault(p => p.User_Id == userId) == null)
-                {
-                    var photographer = new Photographer
-                        {
-                            User_Id = userId,
-                            Username = user.Username,
-                            Rating = 0,
-                            Orders_Complete = 0,
-                            Orders_In_Progress = 0,
-                        };
+            var photographerFound = context.Photographers.FirstOrDefault(p => p.User_Id == userId);
+            var clientFound = context.Clients.FirstOrDefault(p => p.User_Id == userId);
 
-                    context.Photographers.Add(photographer);
-                    context.SaveChanges();
-                }
+            if (clientFound != null && e.Value?.ToString() != "client")
+            {
+                clientFound.Is_Role_Match = false;
+                context.Clients.Update(clientFound);
+
+                ActionLogger.LogActionAsync(user.User_Id,
+                    "Изменение записи",
+                    $"Клиент: {clientFound.User_Id}, Изменение: {clientFound.Is_Role_Match}",
+                    "Clients",
+                    "info");
+            }
+            else if (clientFound != null && e.Value?.ToString() == "client")
+            {
+                clientFound.Is_Role_Match = true;
+                context.Clients.Update(clientFound);
+                ActionLogger.LogActionAsync(user.User_Id,
+                    "Изменение записи",
+                    $"Клиент: {clientFound.User_Id}, Изменение: {clientFound.Is_Role_Match}",
+                    "Clients",
+                    "info");
+            }
+            else if (clientFound == null && e.Value?.ToString() == "client")
+            {
+                ActionLogger.LogActionAsync(user.User_Id,
+                    "Изменение роли",
+                    $"Ошибка. Пользователь: {user.User_Id}, Новая роль: {user.Role}, Старая роль: {oldRole}. Нет записи клиента",
+                    "Clients",
+                    "error");
+
             }
 
-            context.Users.Update(user);
-            context.SaveChanges();
-            var thisUserId = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            if (photographerFound != null && e.Value?.ToString() != "photographer")
+            {
+                photographerFound.Is_Role_Match = false;
+                context.Photographers.Update(photographerFound);
 
-            StateHasChanged();
-            ActionLogger.LogActionAsync(thisUserId,
+                ActionLogger.LogActionAsync(user.User_Id,
+                    "Изменение записи",
+                    $"Фотографер: {photographerFound.User_Id}, Изменение: {photographerFound.Is_Role_Match}",
+                    "Photographer",
+                    "info");
+            }
+            else if (photographerFound != null && e.Value?.ToString() == "photographer")
+            {
+                photographerFound.Is_Role_Match = true;
+                context.Photographers.Update(photographerFound);
+
+                ActionLogger.LogActionAsync(user.User_Id,
+                    "Изменение записи",
+                    $"Фотографер: {photographerFound.User_Id}, Изменение: {photographerFound.Is_Role_Match}",
+                    "Photographer",
+                    "info");
+            }
+            else if (e.Value?.ToString() == "photographer")
+            {
+                var photographer = new Photographer
+                    {
+                        User_Id = userId,
+                        Username = user.Username,
+                        Rating = 0,
+                        Orders_Complete = 0,
+                        Orders_In_Progress = 0,
+                        Is_Role_Match = true,
+                    };
+
+                context.Photographers.Add(photographer);
+
+                ActionLogger.LogActionAsync(This_User_Id,
+                    "Создание записи",
+                    $"Фотографер: {photographer.User_Id}",
+                    "Photographer",
+                    "info");
+            }
+            
+            ActionLogger.LogActionAsync(This_User_Id,
                 "Изменение роли",
                 $"Пользователь: {user.User_Id}, Новая роль: {user.Role}, Старая роль: {oldRole}",
                 "Users",
                 "info");
+
+            context.Users.Update(user);
+            context.SaveChanges();
+            
+            StateHasChanged();
+            
         }
     }
 }

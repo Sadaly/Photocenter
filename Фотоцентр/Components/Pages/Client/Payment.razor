@@ -1,9 +1,15 @@
-﻿@page "/payment"
+﻿@page "/payment/{orderId:int}"
+@rendermode RenderMode.InteractiveServer
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IActionLogger ActionLogger
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "client")]
 
-<PageTitle>Фотоцентр | Новый заказ</PageTitle>
+<PageTitle>Фотоцентр | Оплата заказа</PageTitle>
 
-<head runat="server">
-    <link href="Assets\Css\Payment.css" rel="stylesheet" type="text/css" />
+<head>
+    <link href="Assets/Css/Payment.css" rel="stylesheet" type="text/css" />
 </head>
 
 <div class="payment-container">
@@ -11,29 +17,137 @@
 
     <div class="form-group">
         <label for="cardholder">Имя держателя карты</label>
-        <input type="text" id="cardholder" name="cardholder" placeholder="Введите имя держателя карты" required>
+        <input type="text" id="cardholder" name="cardholder" placeholder="Введите имя держателя карты" required @bind="cardholder">
     </div>
 
     <div class="form-group">
         <label for="cardnumber">Номер карты</label>
-        <input type="text" id="cardnumber" name="cardnumber" placeholder="Введите номер карты" maxlength="16" required>
+        <input type="text" id="cardnumber" name="cardnumber" placeholder="Введите номер карты" maxlength="16" required @bind="cardnumber">
     </div>
 
     <div class="form-group">
         <label for="expiry">Дата окончания (MM/YY)</label>
-        <input type="text" id="expiry" name="expiry" placeholder="MM/YY" maxlength="5" required>
+        <input type="text" id="expiry" name="expiry" placeholder="MM/YY" maxlength="5" required @bind="expiry">
     </div>
 
     <div class="form-group">
         <label for="cvv">CVV</label>
-        <input type="text" id="cvv" name="cvv" placeholder="CVV" maxlength="3" required>
+        <input type="text" id="cvv" name="cvv" placeholder="CVV" maxlength="3" required @bind="cvv">
     </div>
 
-    <div class="total-price">Итоговая сумма: 500 ₽</div>
+    <div class="total-price">Итоговая сумма: @totalAmount ₽</div>
 
-    <button class="payment-button">Оплатить</button>
+    <button class="payment-button" @onclick="HandlePayment">Оплатить</button>
+
+    <!-- Кнопка отмены заказа -->
+    <button class="cancel-button" @onclick="CancelOrder">Отменить заказ</button>
 </div>
 
 @code {
+    [Parameter] public int OrderId { get; set; }
+    private string? cardholder;
+    private string? cardnumber;
+    private string? expiry;
+    private string? cvv;
+    private decimal totalAmount;
+    private Order? order;
 
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        order = await context.Orders.FindAsync(OrderId);
+
+        if (order == null || order.Status_Id > 0)
+        {
+            // Если заказ не найден или уже оплачен, перенаправляем на главную страницу
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        // Устанавливаем итоговую сумму (например, из информации о заказе)
+        totalAmount = order.Total_Amount;
+    }
+
+    private async Task HandlePayment()
+    {
+        if (string.IsNullOrWhiteSpace(cardholder) || string.IsNullOrWhiteSpace(cardnumber) ||
+            string.IsNullOrWhiteSpace(expiry) || string.IsNullOrWhiteSpace(cvv))
+        {
+            // Если не все поля заполнены, возвращаем ошибку
+            return;
+        }
+
+        using var context = DbFactory.CreateDbContext();
+
+        // Обновляем статус заказа на "оплачен"
+        order.Status_Id = 1; // Статус 1 — "оплачен"
+        context.Orders.Update(order);
+
+        // Создаем новый платеж
+        var payment = new Models.Payment
+            {
+                Order_Id = order.Order_Id,
+                Payment_Date = DateTime.Now,
+                Amount_Paid = totalAmount
+            };
+
+        context.Payments.Add(payment);
+
+        // Логируем действие
+        var userId = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+        await ActionLogger.LogActionAsync(userId,
+            "Создание платежа",
+            $"Платеж за заказ {order.Order_Id} на сумму {totalAmount} ₽",
+            "Payments",
+            "info");
+
+        // Сохраняем изменения
+        await context.SaveChangesAsync();
+
+        // Перенаправляем на страницу с подтверждением или успехом
+        NavigationManager.NavigateTo($"/");
+    }
+
+    // Метод отмены заказа
+    private async Task CancelOrder()
+    {
+        var userId = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+        if (order == null)
+        {
+            return;
+        }
+
+        using var context = DbFactory.CreateDbContext();
+
+        // Удаляем все фото, связанные с заказом
+        var photos = await context.Photos.Where(p => p.Order_Id == order.Order_Id).ToListAsync();
+
+        if (photos.Any())
+        {
+            context.Photos.RemoveRange(photos);
+            await ActionLogger.LogActionAsync(userId,
+                "Удаление фото",
+                $"Фото, связанные с заказом {order.Order_Id}, были удалены.",
+                "Photos",
+                "info");
+            await context.SaveChangesAsync();
+        }
+
+        // Удаляем сам заказ
+        context.Orders.Remove(order);
+
+        // Логируем удаление заказа
+        await ActionLogger.LogActionAsync(userId,
+            "Удаление заказа",
+            $"Заказ с ID {order.Order_Id} был удален.",
+            "Orders",
+            "info");
+
+        // Сохраняем изменения
+        await context.SaveChangesAsync();
+
+        // Перенаправляем на главную страницу
+        NavigationManager.NavigateTo("/");
+    }
 }

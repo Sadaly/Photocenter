@@ -1,37 +1,138 @@
 ﻿@page "/new-order"
+@rendermode RenderMode.InteractiveServer
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IActionLogger ActionLogger
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "client")]
 
 <PageTitle>Фотоцентр | Новый заказ</PageTitle>
 
-<head runat="server">
-    <link href="Assets\Css\NewOrder.css" rel="stylesheet" type="text/css" />
+<head>
+    <link href="Assets/Css/NewOrder.css" rel="stylesheet" type="text/css" />
 </head>
 
 <div class="content">
-    <form>
+    <!-- Добавим FormName атрибут для формы -->
+    <EditForm Model="@newOrder" OnValidSubmit="@HandleSubmit" FormName="newOrderForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
         <div class="form-group">
             <label for="photoLink">Выберите фотографию или введите ссылку:</label>
-            <input type="text" placeholder="Ссылка" id="photoLink" name="photoLink">
-            <input type="file" id="photo" name="photo">
+            <InputText id="photoLink" class="form-control" @bind-Value="photoLink" placeholder="Ссылка" />
+            <InputFile OnChange="@HandleFileSelected" />
         </div>
+
         <div class="form-group">
             <label for="service">Выберите одну из доступных услуг:</label>
-            <select id="service" name="service">
-                <option value="retouching">Ретушь фотографий</option>
-                <option value="colorCorrection">Цветокоррекция</option>
-                <option value="restoration">Восстановление старых фото</option>
-                <option value="photoEditing">Редактирование фотографий</option>
-            </select>
+            <InputSelect id="service" class="form-control" @bind-Value="newOrder.Service_Id">
+                <option value="">-- Выберите услугу --</option>
+                @foreach (var service in services)
+                {
+                    <option value="@service.Service_Id">@service.Service_Name</option>
+                }
+            </InputSelect>
         </div>
+
         <div class="form-group">
             <label for="description">Описание необходимых работ:</label>
-            <textarea id="description" name="description" placeholder="Введите описание..." required></textarea>
+            <InputTextArea id="description" class="form-control" @bind-Value="description" placeholder="Введите описание..." required />
         </div>
+
         <div class="form-group">
-            <button type="submit">К оплате</button>
+            <button type="submit" class="btn btn-primary">К оплате</button>
         </div>
-    </form>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div class="alert alert-info mt-3">@statusMessage</div>
+    }
 </div>
 
 @code {
+    private List<Service> services = new List<Service>();
+    private Order newOrder = new Order();
+    private string? photoLink = null;
+    private IBrowserFile? selectedFile;
+    private string? description = null;
+    private string? statusMessage;
+    private byte[]? imageBytes;
 
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        services = await context.Services.ToListAsync(); // Загрузка списка услуг из базы данных
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+
+        // Преобразуем фото в байты асинхронно
+        using (var stream = selectedFile.OpenReadStream())
+        {
+            var buffer = new byte[selectedFile.Size];
+            await stream.ReadAsync(buffer.AsMemory(0, (int)selectedFile.Size)); // Асинхронно читаем
+            imageBytes = buffer;  // Сохраняем байты изображения
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            var userId = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            using var context = DbFactory.CreateDbContext();
+
+            // Добавляем новый заказ
+            newOrder.Order_Date = DateTime.Now;
+            newOrder.Status_Id = 0;
+            newOrder.Total_Amount = services.FirstOrDefault(s => s.Service_Id == newOrder.Service_Id)?.Price ?? 0;
+            newOrder.Client_Id = userId;
+            newOrder.Photographer_Id = -1;
+            context.Orders.Add(newOrder);
+            await context.SaveChangesAsync();
+
+            var photo = new Photo
+                {
+                    Order_Id = newOrder.Order_Id,
+                    Image = imageBytes,
+                    Content_Type = selectedFile?.ContentType,
+                    Is_Final = false, // Пока что ставим Is_Final в false
+                    Photo_Url = photoLink
+                };
+
+            // Сохраняем фото в таблице Photo
+            context.Photos.Add(photo);
+            await context.SaveChangesAsync();  // Применяем изменения
+
+
+            // Логирование действия с заказом
+            await ActionLogger.LogActionAsync(userId,
+                "Создание нового заказа",
+                $"Создан новый заказ: ID {newOrder.Order_Id}, Услуга: {services.FirstOrDefault(s => s.Service_Id == newOrder.Service_Id)?.Service_Name}, Сумма: {newOrder.Total_Amount}",
+                "Orders",
+                "info");
+
+            statusMessage = $"Заказ успешно создан! Выбранная услуга: {services.FirstOrDefault(s => s.Service_Id == newOrder.Service_Id)?.Service_Name}";
+
+            // Перенаправляем на страницу оплаты
+            NavigationManager.NavigateTo($"/payment/{newOrder.Order_Id}");
+        }
+        catch (Exception ex)
+        {
+            // Логируем ошибку
+            var userId = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            await ActionLogger.LogActionAsync(userId,
+                "Ошибка при создании нового заказа",
+                $"Произошла ошибка при создании заказа: {ex.Message}",
+                "Orders",
+                "error");
+
+            // Можно установить статус ошибки, который будет отображен пользователю
+            statusMessage = $"Ошибка при создании заказа: {ex.Message}";
+        }
+    }
 }

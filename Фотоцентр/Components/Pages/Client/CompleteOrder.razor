@@ -1,0 +1,141 @@
+﻿@page "/complete-order/{order_id:int}"
+@rendermode RenderMode.InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "client")]
+
+@inject IActionLogger ActionLogger
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject NavigationManager navigationManager
+
+<PageTitle>Фотоцентр | Готовый заказ</PageTitle>
+
+<head runat="server">
+    <link href="Assets\Css\CompleteOrder.css" rel="stylesheet" type="text/css" />
+</head>
+
+@if (complete_order != null)
+{
+    if (complete_order.Client_Id != This_User_Id)
+        navigationManager.NavigateTo("/", true);
+}
+else
+{
+    navigationManager.NavigateTo("/", true);
+}
+
+
+<div class="container">
+    <h2>Готовый заказ</h2>
+
+    <div class="order-details">
+        <img src="@image_path" alt="Фото заказа">
+        <a href="@complete_photo?.Photo_Url" target="_blank" class="photo-link">Ссылка на фото</a>
+    </div>
+
+    <div class="photographer-info">
+        <p><strong>Фотограф:</strong> Иван Петров</p>
+        <div class="photographer-comment">
+            <p><strong>Комментарий фотографа:</strong> Это был отличный день съемки, фотографии получились очень яркими и выразительными!</p>
+        </div>
+    </div>
+
+    @if (complete_order != null)
+        @if (context.Orders.FirstOrDefaultAsync(o => o.Order_Id == complete_order.Order_Id) != null)
+        {
+            <div class="review-section">
+
+                <label for="review"><strong>Оставьте свой отзыв:</strong></label>
+                <textarea id="review" rows="5" placeholder="Введите ваш отзыв..." @bind="review_text"></textarea>
+
+                <!-- Рейтинг звездами -->
+                <div class="star-rating">
+                    <input type="radio" id="star5" name="rating" value="5" onclick="@rate = 5">
+                    <label for="star5" title="Отлично">★</label>
+                    <input type="radio" id="star4" name="rating" value="4" onclick="@rate = 4">
+                    <label for="star4" title="Хорошо">★</label>
+                    <input type="radio" id="star3" name="rating" value="3" onclick="@rate = 3">
+                    <label for="star3" title="Нормально">★</label>
+                    <input type="radio" id="star2" name="rating" value="2" onclick="@rate = 2">
+                    <label for="star2" title="Плохо">★</label>
+                    <input type="radio" id="star1" name="rating" value="1" onclick="@rate = 1">
+                    <label for="star1" title="Очень плохо">★</label>
+                </div>
+            </div>
+
+            <button class="submit-button">Отправить отзыв</button>
+        }
+        else
+        {
+            <div class="review-section">
+
+                <label><strong>Ваш отзыв:</strong></label>
+                <textarea id="review" rows="5" readonly>@complete_review?.Review_Text</textarea>
+
+                <div class="star-rating">
+                    <input type="radio" id="star5" name="rating" value="5">
+                    <label for="star5" title="Отлично">★</label>
+                    <input type="radio" id="star4" name="rating" value="4">
+                    <label for="star4" title="Хорошо">★</label>
+                    <input type="radio" id="star3" name="rating" value="3">
+                    <label for="star3" title="Нормально">★</label>
+                    <input type="radio" id="star2" name="rating" value="2">
+                    <label for="star2" title="Плохо">★</label>
+                    <input type="radio" id="star1" name="rating" value="1">
+                    <label for="star1" title="Очень плохо">★</label>
+                </div>
+            </div>
+
+            <button class="submit-button" @onsubmit="SaveReviewAsync">Отправить отзыв</button>
+        }
+
+</div>
+
+@code {
+    [Parameter]
+    public int order_id { get; set; }
+    private AppDbContext context = default!;
+
+    public int rate;
+    public string? review_text;
+
+    int This_User_Id;
+    Order? complete_order;
+    Photo? complete_photo;
+    Review? complete_review;
+
+    string? image_path;
+
+    protected override void OnInitialized()
+    {
+        This_User_Id = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+        context = DbFactory.CreateDbContext();
+
+        complete_order = context.Orders.FirstOrDefault(o => o.Order_Id == order_id);
+        complete_photo = context.Photos.FirstOrDefault(p => p.Is_Final == true && p.Order_Id == order_id);
+        complete_review = context.Reviews.FirstOrDefault(r => r.Order_Id == order_id);
+
+        if (complete_photo != null)
+            image_path = PhotoConverter.ConvertToBase64(complete_photo);
+    }
+
+    public async Task SaveReviewAsync()
+    {
+        if (complete_order != null)
+        {
+            if (rate == 0)
+                rate = 5;
+            var review = new Review
+                {
+                    Client_Id = This_User_Id,
+                    Order_Id = complete_order.Order_Id,
+                    Photographer_Id = complete_order.Photographer_Id,
+                    Rate = rate,
+                    Review_Date = DateTime.Now,
+                    Review_Text = review_text,
+                };
+            context.Reviews.Add(review);
+            await context.SaveChangesAsync();
+        }
+    }
+}

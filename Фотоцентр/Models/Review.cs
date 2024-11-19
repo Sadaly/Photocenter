@@ -11,5 +11,6 @@ namespace Фотоцентр.Models
 		public string? Review_Text { get; set; }
         public int Rate { get; set; }
         public DateTime Review_Date { get; set; }
+        public int Order_Id { get; set; }
     }
 }

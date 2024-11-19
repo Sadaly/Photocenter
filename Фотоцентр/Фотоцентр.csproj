@@ -20,9 +20,11 @@
     <Content Remove="wwwroot\Assets\Css\Payment.css" />
     <Content Remove="wwwroot\Assets\Css\Registration.css" />
     <Content Remove="wwwroot\Assets\Css\Reviews.css" />
+    <Content Remove="wwwroot\Assets\Css\Services.css" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="wwwroot\Assets\Css\Services.css" />
     <None Include="wwwroot\Assets\Css\NotCompleteOrder.css" />
     <None Include="wwwroot\Assets\Css\CompleteOrder.css" />
     <None Include="wwwroot\Assets\Css\Reviews.css" />
@@ -41,6 +43,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="Components\Pages\Manager\Services.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
     <Content Update="wwwroot\Assets\Css\SendOrder.css">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
@@ -61,6 +66,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.66.2" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.6" />
   </ItemGroup>
 

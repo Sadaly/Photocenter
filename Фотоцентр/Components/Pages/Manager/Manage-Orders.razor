@@ -1,4 +1,8 @@
 ﻿@page "/manage-orders"
+@rendermode RenderMode.InteractiveServer
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IActionLogger ActionLogger
+@attribute [Authorize(Roles = "manager")]
 
 <PageTitle>Фотоцентр | Принятые заказы</PageTitle>
 

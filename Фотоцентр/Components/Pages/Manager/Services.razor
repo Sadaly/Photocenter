@@ -1,0 +1,138 @@
+﻿@page "/services"
+@rendermode RenderMode.InteractiveServer
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IActionLogger ActionLogger
+@attribute [Authorize(Roles = "manager")]
+
+<PageTitle>Фотоцентр | Сервисы</PageTitle>
+<head>
+    <link href="Assets/Css/Services.css" rel="stylesheet" type="text/css" />
+</head>
+
+<div class="services-container">
+    <div class="search-container">
+        <input type="text" placeholder="Название сервиса" @bind="serviceNameFilter" @bind:event="oninput" />
+        <input type="text" placeholder="Цена" @bind="servicePriceFilter" @bind:event="oninput" />
+    </div>
+
+    <Paginator State="pagination" />
+
+    <QuickGrid Items="FilteredServices" Pagination="pagination">
+        <PropertyColumn Title="Название" Property="@(s => s.Service_Name)" Sortable="true" />
+        <PropertyColumn Title="Цена" Property="@(s => s.Price)" Sortable="true" />
+        <PropertyColumn Title="Описание" Property="@(s => s.Description)" Sortable="true" />
+        <TemplateColumn Title="Действия">
+            <button @onclick="@(async () => await DeleteService(context.Service_Id))" class="btn btn-danger">Удалить</button>
+        </TemplateColumn>
+    </QuickGrid>
+
+    <h3>Добавить новый сервис</h3>
+    <EditForm Model="@newService" OnValidSubmit="HandleValidSubmit" autocomplete="off">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label for="serviceName">Название сервиса:</label>
+            <InputText id="serviceName" class="form-control" @bind-Value="newService.Service_Name" required />
+        </div>
+
+        <div class="form-group">
+            <label for="price">Цена:</label>
+            <InputNumber id="price" class="form-control" @bind-Value="newService.Price" required />
+        </div>
+
+        <div class="form-group">
+            <label for="description">Описание:</label>
+            <InputTextArea id="description" class="form-control" @bind-Value="newService.Description" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Добавить сервис</button>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div class="alert alert-info">
+            @statusMessage
+        </div>
+    }
+</div>
+
+@code {
+    private AppDbContext context = default!;
+
+    private string serviceNameFilter = "";
+    private string servicePriceFilter = "";
+
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 20 };
+
+    private Service newService = new Service();
+    private string statusMessage = "";
+
+    private IQueryable<Service> FilteredServices =>
+        context.Services
+            .Where(s => s.Service_Name.Contains(serviceNameFilter))
+            .Where(s => s.Price.ToString().Contains(servicePriceFilter));
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            using (var dbContext = DbFactory.CreateDbContext())
+            {
+                // Добавление нового сервиса в базу данных
+                dbContext.Services.Add(newService);
+                // Обновление списка сервисов
+                statusMessage = $"Сервис '{newService.Service_Name}' успешно добавлен!";
+                newService = new Service(); // Очищаем форму
+
+                // Логирование действия
+                await ActionLogger.LogActionAsync(1, // ID пользователя (например, админ)
+                    "Добавление сервиса",
+                    $"Новый сервис: {newService.Service_Name}, Цена: {newService.Price}, Описание: {newService.Description}",
+                    "Services",
+                    "info");
+                await dbContext.SaveChangesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Ошибка при добавлении сервиса: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteService(int serviceId)
+    {
+        try
+        {
+            using (var dbContext = DbFactory.CreateDbContext())
+            {
+                var serviceToDelete = dbContext.Services.FirstOrDefault(s => s.Service_Id == serviceId);
+
+                if (serviceToDelete != null)
+                {
+                    dbContext.Services.Remove(serviceToDelete);
+
+                    // Логирование действия
+                    await ActionLogger.LogActionAsync(1, // ID пользователя (например, админ)
+                        "Удаление сервиса",
+                        $"Сервис удален: {serviceToDelete.Service_Name}, ID: {serviceToDelete.Service_Id}",
+                        "Services",
+                        "info");
+
+                    await dbContext.SaveChangesAsync();
+                }
+
+                statusMessage = $"Сервис '{serviceToDelete?.Service_Name}' успешно удален!";
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Ошибка при удалении сервиса: {ex.Message}";
+        }
+    }
+}

@@ -1,0 +1,102 @@
+﻿@page "/reviews/{photographer_id:int}"
+@rendermode RenderMode.InteractiveServer
+@attribute [Authorize(Roles = "admin, manager, photographer")]
+
+@inject IActionLogger ActionLogger
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject NavigationManager navigationManager
+
+<PageTitle>Фотоцентр | Регистрация</PageTitle>
+
+<head runat="server">
+    <link href="Assets\Css\Reviews.css" rel="stylesheet" type="text/css" />
+</head>
+
+@if (HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Role) == "photographer")
+{
+    if (This_User_Id != photographer_id)
+        navigationManager.NavigateTo("/users", true);
+}
+
+
+<div class="container">
+    <h2>Отзывы о фотографе @photographer.Username</h2>
+
+    @foreach (var review in PhotographerReviews)
+    {
+        <div class="review-item">
+            <div class="review-header">
+            <p class="client-info">
+                @{user = context.Users.FirstOrDefault(u => u.User_Id == review.Client_Id);}
+                Клиент: @user?.Username (ID: @user?.User_Id)</p>
+            <p class="review-date">Дата: @review.Review_Date.ToString()</p>
+        </div>
+        <div class="review-rating">
+            @for (decimal i = 0; i < 5; i++)
+                {
+                    if (i < Math.Round((decimal)review.Rate))
+                    {
+                        <span class="star">★</span>
+                    }
+                    else
+                    {
+                        <span class="star">☆</span>
+                    }
+                }
+        </div>
+        <div class="review-content">
+            @review.Review_Text
+        </div>
+        <AuthorizeView Roles="manager">
+            <button class="delete-button" @onclick="() => DeleteReview(review.Review_Id)">Удалить</button>
+        </AuthorizeView>
+        </div>
+
+    }
+</div>
+
+@code{
+    [Parameter]
+    public int photographer_id { get; set; }
+    private AppDbContext context = default!;
+    int This_User_Id;
+
+    User? user;
+    Photographer photographer = null!;
+
+    private IQueryable<Review> PhotographerReviews =>
+        context.Reviews.Where(r => r.Photographer_Id == photographer.User_Id);
+
+    protected override void OnInitialized()
+    {
+        This_User_Id = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+        context = DbFactory.CreateDbContext();
+        photographer = context.Photographers.First(p => p.User_Id == photographer_id);
+    }
+
+    private async Task DeleteReview(int review_id)
+    {
+        var review = await context.Reviews.FirstOrDefaultAsync(r => r.Review_Id == review_id);
+        if (review != null)
+        {
+            context.Reviews.Remove(review);
+            await context.SaveChangesAsync();
+            
+
+            await ActionLogger.LogActionAsync(This_User_Id,
+                    "Удаление отзыва",
+                    $"Отзыв: {review.Review_Id}",
+                    "Reviews",
+                    "info");
+        }
+        else
+        {
+            await ActionLogger.LogActionAsync(This_User_Id,
+                    "Удаление отзыва",
+                    $"Отзыв: {review?.Review_Id} не найден",
+                    "Reviews",
+                    "error");
+        }
+    }
+}

@@ -10,7 +10,6 @@ namespace Фотоцентр.Data
         public DbSet<Client> Clients { get; set; } = null!;
         public DbSet<ActionLog> ActionLogs { get; set; } = null!;
 		public DbSet<Order> Orders { get; set; } = null!;
-		public DbSet<OrderStatus> OrderStatuses { get; set; } = null!;
 		public DbSet<Payment> Payments { get; set; } = null!;
         public DbSet<Photographer> Photographers { get; set; } = null!;
         public DbSet<Photo> Photos { get; set; } = null!;

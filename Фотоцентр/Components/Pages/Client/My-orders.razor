@@ -1,4 +1,8 @@
 ﻿@page "/my-orders"
+@rendermode RenderMode.InteractiveServer
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IHttpContextAccessor HttpContextAccessor
+@attribute [Authorize(Roles = "client")]
 
 <PageTitle>Фотоцентр | Мои заказы</PageTitle>
 
@@ -8,47 +12,83 @@
 
 <div class="container">
     <h2>Информация о заказах</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Дата создания</th>
-                <th>Дата закрытия</th>
-                <th>Имя фотографа</th>
-                <th>Цена</th>
-                <th>Статус</th>
-                <th>Действие</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>01.10.2024</td>
-                <td>03.10.2024</td>
-                <td>Иван Петров</td>
-                <td>5000 ₽</td>
-                <td><span class="status completed">Завершён</span></td>
-                <td><button class="view-button">Посмотреть заказ</button></td>
-            </tr>
-            <tr>
-                <td>05.10.2024</td>
-                <td>-</td>
-                <td>Анна Иванова</td>
-                <td>3000 ₽</td>
-                <td><span class="status pending">В процессе</span></td>
-                <td><button class="view-button">Посмотреть заказ</button></td>
-            </tr>
-            <tr>
-                <td>12.09.2024</td>
-                <td>14.09.2024</td>
-                <td>Сергей Сидоров</td>
-                <td>7000 ₽</td>
-                <td><span class="status canceled">Отменён</span></td>
-                <td><button class="view-button">Посмотреть заказ</button></td>
-            </tr>
-        </tbody>
-    </table>
+    <Paginator State="pagination" />
+    <QuickGrid TItem="OrderDisplayModel" Items="Orders" Pagination="pagination">
+        <PropertyColumn Title="Номер заказа" Property="@(o => o.Order_Id)" Sortable="true"></PropertyColumn>
+        <PropertyColumn Title="Фотограф" Property="@(o => o.Username)" Sortable="true"></PropertyColumn>
+        <PropertyColumn Title="Сервис" Property="@(o => o.Service_Name)" Sortable="true"></PropertyColumn>
+        <PropertyColumn Title="Дата" Property="@(o => o.Order_Date)" Format="yyyy-MM-dd:hh-mm-ss" Sortable="true"></PropertyColumn>
+        <PropertyColumn Title="Стоимость" Property="@(o => o.Total_Amount)" Sortable="true"></PropertyColumn>
+        <TemplateColumn Title="Статус" Sortable="true">
+            @if (context.StatusId == 0)
+            {
+                <span class="status waiting">
+                    <a class="view-button" href="/payment/@context.Order_Id">
+                        Ожидает оплаты
+                    </a>
+                </span>
+            }
+            else if (context.StatusId == 1)
+            {
+                <span class="status awaiting">
+                    Ждем присвоения фотографа
+                </span>
+            }
+            else if (context.StatusId == 2)
+            {
+                <span class="status in-progress">
+                    Ждем выполнения фотографом
+                </span>
+            }
+            else if (context.StatusId == 3)
+            {
+                <span class="status completed">
+                    <a class="view-button" href="/complete-order/@context.Order_Id">
+                        Готово к просмотру
+                    </a>
+                </span>
+            }
+        </TemplateColumn>
+    </QuickGrid>
 </div>
 
-
 @code {
+    private int This_User_Id;
+    private AppDbContext context = default!;
 
+    private IQueryable<OrderDisplayModel> Orders =>
+    context.Orders
+        .Where(o => o.Client_Id == This_User_Id) // Убедитесь, что данные принадлежат текущему пользователю
+        .Select(o => new OrderDisplayModel
+            {
+                Order_Id = o.Order_Id,
+                Username = o.Photographer_Id != -1 ? context.Photographers.FirstOrDefault(p => p.User_Id == o.Photographer_Id).Username : "Не назначен",
+                Service_Name = context.Services.FirstOrDefault(s => s.Service_Id == o.Service_Id).Service_Name,
+                Order_Date = o.Order_Date,
+                Total_Amount = o.Total_Amount,
+                StatusId = o.Status_Id
+            })
+        .AsQueryable();
+
+
+
+    PaginationState pagination = new PaginationState { ItemsPerPage = 20 };
+
+    protected override void OnInitialized()
+    {
+        // Получаем идентификатор текущего пользователя
+        This_User_Id = Convert.ToInt32(HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+        context = DbFactory.CreateDbContext();
+    }
+
+    // Модель для отображения данных о заказе с подгруженными именами фотографа и сервиса
+    public class OrderDisplayModel
+    {
+        public int Order_Id { get; set; }
+        public string? Username { get; set; }
+        public string? Service_Name { get; set; }
+        public DateTime Order_Date { get; set; }
+        public decimal Total_Amount { get; set; }
+        public int StatusId { get; set; }
+    }
 }

@@ -3,6 +3,7 @@
 @inject IDbContextFactory<AppDbContext> DbFactory
 @attribute [Authorize(Roles = "client")]
 @inject IHttpContextAccessor HttpContextAccessor
+@inject IActionLogger ActionLogger
 
 <PageTitle>Фотоцентр | Профиль</PageTitle>
 
@@ -80,10 +81,26 @@
     {
         if (client != null)
         {
+
+            ActionLogger.LogActionAsync(client.User_Id,
+                "Изменение данных",
+                $"Клиент: {client.User_Id}, Старая запись (адрес, телефон): {client.Address} {client.Phone}, Новая запись: {address} {phone}",
+                "Clients",
+                "info");
+
             client.Address = address;
             client.Phone = phone;
             context.Clients.Update(client);
             context.SaveChanges();
+        }
+        else
+        {
+            if (user != null)
+                ActionLogger.LogActionAsync(user.User_Id,
+                    "Изменение данных",
+                    $"Клиент не найден",
+                    "Clients",
+                    "error");
         }
     }
 }

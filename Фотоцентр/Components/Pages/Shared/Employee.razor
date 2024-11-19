@@ -27,6 +27,9 @@
         <PropertyColumn Property="@(p => p.Rating)" />
         <PropertyColumn Property="@(p => p.Orders_In_Progress)" />
         <PropertyColumn Property="@(p => p.Orders_Complete)" />
+        <TemplateColumn Title="Просмотр">     
+            <a href="/reviews/@context.User_Id">Посмотреть отзывы</a>
+        </TemplateColumn>
     </QuickGrid>
 </div>
 
@@ -39,7 +42,8 @@
     PaginationState pagination = new PaginationState { ItemsPerPage = 20 };
 
     private IQueryable<Photographer> FilteredPhotographers=>
-        context.Photographers.Where(a => (a.User_Id.ToString().Contains(userIdFilter) && !userIdFilter.Contains(" "))
+        context.Photographers.Where(p => p.Is_Role_Match == true).
+        Where(a => (a.User_Id.ToString().Contains(userIdFilter) && !userIdFilter.Contains(" "))
         || (userIdFilter.Contains(" ") && a.User_Id.ToString().Equals(userIdFilter))).
         Where(a => a.Username.Contains(UsernameFilter));
 

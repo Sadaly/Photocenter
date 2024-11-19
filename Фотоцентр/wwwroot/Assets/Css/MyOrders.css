@@ -1,64 +1,100 @@
-﻿h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #333;
+﻿/* Основной контейнер */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
+h2 {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Стили для таблицы */
 table {
     width: 100%;
     border-collapse: collapse;
-    background-color: #fff;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
 }
 
-th, td {
-    padding: 15px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
+    table th, table td {
+        border: 1px solid #ddd;
+        padding: 12px 15px;
+        text-align: left;
+    }
 
-th {
-    background-color: #007bff;
-    color: white;
-}
+    table th {
+        background-color: #f4f4f4;
+        color: #333;
+        font-weight: bold;
+    }
 
-tr:hover {
-    background-color: #f1f1f1;
-}
+    table td {
+        background-color: #fff;
+    }
 
+/* Статусная колонка */
 .status {
-    padding: 5px 10px;
-    border-radius: 5px;
-    color: white;
+    font-weight: bold;
+    padding: 5px;
+    text-align: center;
+    display: inline-block;
 }
+
+    .status.waiting {
+        color: #ff9800;
+        background-color: #fff3e0;
+    }
+
+    .status.awaiting {
+        color: #2196f3;
+        background-color: #e3f2fd;
+    }
+
+    .status.in-progress {
+        color: #8bc34a;
+        background-color: #e8f5e9;
+    }
 
     .status.completed {
-        background-color: #28a745;
+        color: #4caf50;
+        background-color: #e8f5e9;
     }
 
-    .status.pending {
-        background-color: #ffc107;
-    }
-
-    .status.canceled {
-        background-color: #dc3545;
-    }
-
+/* Ссылки на кнопки */
 .view-button {
+    text-decoration: none;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 4px;
     background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    text-align: center;
 }
 
     .view-button:hover {
         background-color: #0056b3;
     }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
+/* Стили для пагинации */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
 }
+
+    .pagination a {
+        padding: 8px 16px;
+        margin: 0 5px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+    }
+
+        .pagination a:hover {
+            background-color: #0056b3;
+        }
+
+        .pagination a.active {
+            background-color: #4caf50;
+        }

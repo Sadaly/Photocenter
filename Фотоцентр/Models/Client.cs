@@ -9,5 +9,6 @@ namespace Фотоцентр.Models
         public string Email { get; set; } = null!;
         public string? Phone { get; set; }
         public string? Address { get; set; }
+        public bool? Is_Role_Match { get; set; }
     }
 }
