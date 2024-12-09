@@ -54,9 +54,9 @@
     [SupplyParameterFromForm]
     public LoginViewModel Model { get; set; } = new();
 
-    private string? errorMessage;
+    public string? errorMessage;
 
-    private async Task Authenticate()
+    public async Task Authenticate()
     {
         var userAccount = await AppDbContext.Users.FirstOrDefaultAsync(x => x.Username == Model.Username);
         if (userAccount is null || userAccount.Password_Hash != PasswordHelper.HashPassword(Model.Password))
